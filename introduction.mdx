@@ -1,0 +1,143 @@
+---
+title: "Introduction"
+description: "Connect AI chatbots to French Open Data through the Model Context Protocol"
+---
+
+## What is the data.gouv.fr MCP Server?
+
+The data.gouv.fr MCP Server is a Model Context Protocol (MCP) server that allows AI chatbots like Claude, ChatGPT, and Gemini to search, explore, and analyze datasets from [data.gouv.fr](https://www.data.gouv.fr)—France's national Open Data platform—directly through conversation.
+
+Instead of manually browsing websites or downloading files, you can simply ask questions like:
+
+- "What datasets are available about housing prices in Paris?"
+- "Show me the latest population data for Lyon"
+- "Find datasets about renewable energy in France"
+
+The MCP server handles all the API calls and data retrieval behind the scenes, giving your AI assistant direct access to over 50,000 public datasets.
+
+## What is the Model Context Protocol?
+
+The Model Context Protocol (MCP) is an open standard that enables AI applications to securely connect to external data sources and tools. Think of it as a universal connector that lets AI assistants interact with databases, APIs, and services in a standardized way.
+
+With MCP, AI chatbots can:
+
+- Access real-time data from external sources
+- Execute specialized tools and functions
+- Maintain context across complex workflows
+- Work with multiple data sources simultaneously
+
+The data.gouv.fr MCP Server implements this protocol to bridge AI assistants with French Open Data.
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Dataset search" icon="magnifying-glass">
+    Search and explore 50,000+ datasets from data.gouv.fr with natural language queries
+  </Card>
+  
+  <Card title="Tabular API queries" icon="table">
+    Query CSV and Excel files directly without downloading, with filtering and sorting support
+  </Card>
+  
+  <Card title="File downloads" icon="download">
+    Download and parse large CSV, JSON, and JSONL files up to 500MB with automatic delimiter detection
+  </Card>
+  
+  <Card title="External APIs" icon="code">
+    Access third-party dataservices with OpenAPI specifications and endpoint documentation
+  </Card>
+  
+  <Card title="Usage metrics" icon="chart-simple">
+    Retrieve monthly visits and download statistics for datasets and resources
+  </Card>
+  
+  <Card title="15+ AI clients" icon="robot">
+    Works with Claude, ChatGPT, Gemini, Cursor, VS Code, Windsurf, HuggingChat, and more
+  </Card>
+</CardGroup>
+
+## Available MCP tools
+
+The server provides 10 specialized tools for working with French Open Data:
+
+**Datasets (static data files)**
+- `search_datasets` - Search for datasets by keywords
+- `get_dataset_info` - Get detailed dataset metadata
+- `list_dataset_resources` - List all files in a dataset
+- `get_resource_info` - Get detailed information about a file
+- `query_resource_data` - Query data from CSV/Excel files via Tabular API
+- `download_and_parse_resource` - Download and parse large files
+
+**Dataservices (external APIs)**
+- `search_dataservices` - Search for registered APIs by keywords
+- `get_dataservice_info` - Get detailed API metadata
+- `get_dataservice_openapi_spec` - Fetch OpenAPI specifications
+
+**Metrics**
+- `get_metrics` - Get visits and download statistics
+
+<Tip>
+  Learn more about each tool in the [MCP Tools Reference](/api/tools/overview).
+</Tip>
+
+## Who should use this?
+
+The data.gouv.fr MCP Server is designed for:
+
+**Developers** building applications that need access to French Open Data without managing API integrations manually.
+
+**Data analysts** who want to explore and query datasets conversationally without writing code or downloading large files.
+
+**Researchers** investigating French public data who need quick access to multiple datasets and their metadata.
+
+**AI application builders** creating tools that require real-time access to government statistics, geographic data, or public records.
+
+<Note>
+  The MCP server is read-only and requires no API key. All data from data.gouv.fr is freely accessible under open licenses.
+</Note>
+
+## How it works
+
+The MCP server acts as a bridge between your AI chatbot and the data.gouv.fr platform:
+
+1. **You ask a question** in natural language to your AI assistant
+2. **The AI decides** which MCP tools to use based on your question
+3. **The MCP server** calls data.gouv.fr APIs and retrieves the data
+4. **The AI receives** the data and formulates a response
+5. **You get an answer** with the information you need
+
+All of this happens automatically in seconds, without you needing to understand API endpoints, parameters, or data formats.
+
+## Hosted endpoint
+
+A public MCP server instance is available at:
+
+```
+https://mcp.data.gouv.fr/mcp
+```
+
+You can connect your AI chatbot to this endpoint immediately—no installation, hosting, or configuration required. The service is free and open to everyone.
+
+<Tip>
+  You can also [self-host the server](/setup/docker) if you need custom configurations or want to run it in your own infrastructure.
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Connect your AI chatbot in 3 simple steps
+  </Card>
+  
+  <Card title="Client setup" icon="plug" href="/clients/overview">
+    Detailed setup guides for Claude, ChatGPT, Gemini, and more
+  </Card>
+  
+  <Card title="Docker deployment" icon="docker" href="/setup/docker">
+    Self-host the MCP server with Docker Compose
+  </Card>
+  
+  <Card title="Explore the tools" icon="wrench" href="/api/tools/overview">
+    Learn what each MCP tool can do
+  </Card>
+</CardGroup>

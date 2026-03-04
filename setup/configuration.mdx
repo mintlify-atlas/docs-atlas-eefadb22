@@ -1,0 +1,290 @@
+---
+title: Configuration
+description: Complete reference for all environment variables and configuration options
+---
+
+The data.gouv.fr MCP server is configured entirely through environment variables. This page documents all available configuration options.
+
+## Core Server Settings
+
+<ParamField path="MCP_HOST" type="string" default="0.0.0.0">
+  The host address to bind the HTTP server to.
+
+  - **`0.0.0.0`**: Accept connections from any network interface (default for Docker)
+  - **`127.0.0.1`**: Only accept connections from localhost (recommended for local development)
+
+  <Warning>
+    For local development, use `127.0.0.1` to follow MCP security best practices and prevent external access.
+  </Warning>
+
+  ```bash
+  MCP_HOST=127.0.0.1
+  ```
+</ParamField>
+
+<ParamField path="MCP_PORT" type="string" default="8000">
+  The port number for the HTTP server.
+
+  ```bash
+  MCP_PORT=8007
+  ```
+
+  The server will be available at `http://{MCP_HOST}:{MCP_PORT}/mcp`.
+</ParamField>
+
+<ParamField path="MCP_ENV" type="string" default="local">
+  Environment name reported to Sentry for monitoring and error tracking.
+
+  Common values:
+  - **`local`**: Local development (default)
+  - **`demo`**: Demo/staging environment
+  - **`preprod`**: Pre-production environment
+  - **`prod`**: Production environment
+
+  ```bash
+  MCP_ENV=prod
+  ```
+
+  This value is used to tag errors and traces in Sentry, making it easier to filter issues by environment.
+</ParamField>
+
+## Data.gouv.fr API Settings
+
+<ParamField path="DATAGOUV_API_ENV" type="string" default="prod">
+  Controls which data.gouv.fr API environment the MCP server connects to.
+
+  Available values:
+  - **`prod`**: Production API at `https://www.data.gouv.fr` (default)
+  - **`demo`**: Demo API at `https://demo.data.gouv.fr`
+
+  ```bash
+  DATAGOUV_API_ENV=demo
+  ```
+
+  <Note>
+    The Metrics API only works with `prod` environment. The demo environment does not have metrics data.
+  </Note>
+</ParamField>
+
+## Logging Configuration
+
+<ParamField path="LOG_LEVEL" type="string" default="INFO">
+  Python logging level for application logs.
+
+  Common values (from most to least verbose):
+  - **`DEBUG`**: Detailed diagnostic information
+  - **`INFO`**: General informational messages (default)
+  - **`WARNING`**: Warning messages for potentially problematic situations
+  - **`ERROR`**: Error messages for serious problems
+  - **`CRITICAL`**: Critical messages for very severe errors
+
+  ```bash
+  LOG_LEVEL=DEBUG
+  ```
+
+  <Tip>
+    Use `DEBUG` level during development to see detailed request/response information. Use `INFO` or `WARNING` in production to reduce log volume.
+  </Tip>
+</ParamField>
+
+## Monitoring and Error Tracking
+
+### Sentry Integration
+
+The MCP server includes built-in support for [Sentry](https://sentry.io) error and performance monitoring.
+
+<ParamField path="SENTRY_DSN" type="string" default="">
+  Sentry Data Source Name (DSN) for error and performance monitoring.
+
+  When unset or empty, Sentry monitoring is disabled.
+
+  ```bash
+  SENTRY_DSN=https://your-key@sentry.io/your-project-id
+  ```
+
+  The DSN is available in your Sentry project settings under "Client Keys (DSN)".
+</ParamField>
+
+<ParamField path="SENTRY_SAMPLE_RATE" type="float" default="1.0">
+  Sampling rate for Sentry traces and performance profiles.
+
+  - **`1.0`**: Sample 100% of transactions (default)
+  - **`0.1`**: Sample 10% of transactions
+  - **`0.0`**: Disable performance sampling
+
+  ```bash
+  SENTRY_SAMPLE_RATE=0.1
+  ```
+
+  <Tip>
+    In high-traffic production environments, use a lower sample rate (e.g., `0.1` or `0.05`) to reduce Sentry costs while still capturing representative performance data.
+  </Tip>
+</ParamField>
+
+## Configuration Examples
+
+### Local Development
+
+For local development with maximum debugging information:
+
+```bash .env
+MCP_HOST=127.0.0.1
+MCP_PORT=8000
+MCP_ENV=local
+DATAGOUV_API_ENV=prod
+LOG_LEVEL=DEBUG
+```
+
+### Testing with Demo API
+
+To test against the demo data.gouv.fr environment:
+
+```bash .env
+MCP_HOST=127.0.0.1
+MCP_PORT=8000
+MCP_ENV=demo
+DATAGOUV_API_ENV=demo
+LOG_LEVEL=INFO
+```
+
+### Production Deployment
+
+For production deployment with monitoring:
+
+```bash .env
+MCP_HOST=0.0.0.0
+MCP_PORT=8000
+MCP_ENV=prod
+DATAGOUV_API_ENV=prod
+LOG_LEVEL=INFO
+SENTRY_DSN=https://your-key@sentry.io/your-project-id
+SENTRY_SAMPLE_RATE=0.1
+```
+
+### Docker Compose Production
+
+When using Docker Compose, pass environment variables:
+
+```bash
+MCP_ENV=prod \
+DATAGOUV_API_ENV=prod \
+SENTRY_DSN=https://your-key@sentry.io/your-project-id \
+SENTRY_SAMPLE_RATE=0.1 \
+docker compose up -d
+```
+
+## Environment vs Production Environments
+
+<Note>
+  Don't confuse `MCP_ENV` with `DATAGOUV_API_ENV`:
+
+  - **`MCP_ENV`**: Controls monitoring labels (local, demo, preprod, prod)
+  - **`DATAGOUV_API_ENV`**: Controls which data.gouv.fr API to use (prod vs demo)
+</Note>
+
+Typical combinations:
+
+| Use Case | MCP_ENV | DATAGOUV_API_ENV |
+|----------|---------|------------------|
+| Local development | `local` | `prod` |
+| Testing demo data | `local` or `demo` | `demo` |
+| Pre-production | `preprod` | `prod` |
+| Production | `prod` | `prod` |
+
+## Security Best Practices
+
+### Local Development
+
+<Card title="Bind to localhost" icon="shield">
+  Always use `MCP_HOST=127.0.0.1` for local development to prevent external access:
+
+  ```bash
+  MCP_HOST=127.0.0.1
+  ```
+
+  This follows MCP security best practices and ensures the server only accepts connections from your local machine.
+</Card>
+
+### Production Deployment
+
+<Card title="Use a reverse proxy" icon="server">
+  Never expose the MCP server directly to the internet. Use a reverse proxy (nginx, Caddy, Traefik) with:
+
+  - **Authentication**: API keys, OAuth, or other authentication mechanisms
+  - **Rate limiting**: Protect against abuse
+  - **TLS/SSL**: Encrypt all traffic with HTTPS
+  - **Access logs**: Monitor and audit access
+</Card>
+
+### Sensitive Configuration
+
+<Warning>
+  Never commit `.env` files containing production secrets to version control.
+
+  - Use environment-specific `.env` files (`.env.local`, `.env.prod`)
+  - Add `.env` to `.gitignore`
+  - Use secret management tools (Vault, AWS Secrets Manager, etc.) for production
+</Warning>
+
+## Validation
+
+### Port Validation
+
+The server validates that `MCP_PORT` is a valid integer:
+
+```bash
+# Valid
+MCP_PORT=8000
+
+# Invalid (will cause startup error)
+MCP_PORT=invalid
+```
+
+Error message:
+```
+Error: Invalid MCP_PORT environment variable: invalid
+```
+
+### Sentry Sample Rate
+
+The `SENTRY_SAMPLE_RATE` must be a float between 0.0 and 1.0:
+
+```bash
+# Valid
+SENTRY_SAMPLE_RATE=0.5
+
+# Invalid (will cause error)
+SENTRY_SAMPLE_RATE=1.5
+```
+
+## Troubleshooting
+
+### Environment variables not loading
+
+Ensure you've loaded the `.env` file:
+
+```bash
+set -a && source .env && set +a
+```
+
+Verify variables are set:
+
+```bash
+echo $MCP_PORT
+```
+
+### Server not accessible
+
+Check that `MCP_HOST` is set correctly:
+
+- **Local development**: Use `127.0.0.1`
+- **Docker/production**: Use `0.0.0.0`
+
+### Sentry not receiving events
+
+Verify your Sentry configuration:
+
+1. Check that `SENTRY_DSN` is set and valid
+2. Ensure `MCP_ENV` is set to help filter events
+3. Check your Sentry project's inbound filters
+4. Look for Sentry initialization messages in logs

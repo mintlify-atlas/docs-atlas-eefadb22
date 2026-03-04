@@ -1,0 +1,398 @@
+---
+title: Other AI clients
+description: Connect Gemini, Cursor, VS Code, Windsurf, HuggingChat, and more to the data.gouv.fr MCP server
+---
+
+This page covers setup instructions for AI clients beyond Claude and ChatGPT. Each client has its own configuration method and file format.
+
+<Accordion title="AnythingLLM">
+  ## AnythingLLM
+
+  AnythingLLM is a multi-model LLM interface that supports MCP servers.
+
+  ### Configuration
+
+  1. Locate the `anythingllm_mcp_servers.json` file in your AnythingLLM storage plugins directory:
+
+  <CodeGroup>
+
+  ```text macOS
+  ~/Library/Application Support/anythingllm-desktop/storage/plugins/anythingllm_mcp_servers.json
+  ```
+
+  ```text Linux
+  ~/.config/anythingllm-desktop/storage/plugins/anythingllm_mcp_servers.json
+  ```
+
+  ```text Windows
+  C:\Users\<username>\AppData\Roaming\anythingllm-desktop\storage\plugins\anythingllm_mcp_servers.json
+  ```
+
+  </CodeGroup>
+
+  2. Add the following configuration:
+
+  ```json
+  {
+    "mcpServers": {
+      "datagouv": {
+        "type": "streamable",
+        "url": "https://mcp.data.gouv.fr/mcp"
+      }
+    }
+  }
+  ```
+
+  3. Restart AnythingLLM to apply the changes
+
+  For more details, see the [AnythingLLM MCP documentation](https://docs.anythingllm.com/mcp-compatibility/overview).
+</Accordion>
+
+<Accordion title="Gemini CLI">
+  ## Gemini CLI
+
+  Google's Gemini CLI supports MCP servers through a settings file.
+
+  ### Configuration
+
+  Add the following to your `~/.gemini/settings.json` file:
+
+  <CodeGroup>
+
+  ```text macOS
+  ~/.gemini/settings.json
+  ```
+
+  ```text Linux
+  ~/.gemini/settings.json
+  ```
+
+  ```text Windows
+  %USERPROFILE%\.gemini\settings.json
+  ```
+
+  </CodeGroup>
+
+  ```json
+  {
+    "mcpServers": {
+      "datagouv": {
+        "httpUrl": "https://mcp.data.gouv.fr/mcp"
+      }
+    }
+  }
+  ```
+
+  Note that Gemini uses `httpUrl` instead of `url` in the configuration.
+</Accordion>
+
+<Accordion title="Cursor">
+  ## Cursor
+
+  Cursor is an AI-powered code editor with built-in MCP support.
+
+  ### Configuration
+
+  1. Open Cursor Settings
+  2. Search for "MCP" or "Model Context Protocol"
+  3. Add a new MCP server with the following configuration:
+
+  ```json
+  {
+    "mcpServers": {
+      "datagouv": {
+        "url": "https://mcp.data.gouv.fr/mcp",
+        "transport": "http"
+      }
+    }
+  }
+  ```
+
+  4. Save the settings and restart Cursor
+</Accordion>
+
+<Accordion title="VS Code">
+  ## VS Code
+
+  Visual Studio Code supports MCP servers through a dedicated configuration file.
+
+  ### Configuration
+
+  1. Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P)
+  2. Run **MCP: Open User Configuration**
+  3. This opens the `mcp.json` file located at:
+
+  <CodeGroup>
+
+  ```text macOS
+  ~/Library/Application Support/Code/User/mcp.json
+  ```
+
+  ```text Linux
+  ~/.config/Code/User/mcp.json
+  ```
+
+  ```text Windows
+  %APPDATA%\Code\User\mcp.json
+  ```
+
+  </CodeGroup>
+
+  4. Add the following configuration:
+
+  ```json
+  {
+    "servers": {
+      "datagouv": {
+        "url": "https://mcp.data.gouv.fr/mcp",
+        "type": "http"
+      }
+    }
+  }
+  ```
+
+  Note that VS Code uses `servers` instead of `mcpServers` as the top-level key.
+
+  5. Save the file and reload VS Code
+</Accordion>
+
+<Accordion title="Windsurf">
+  ## Windsurf
+
+  Windsurf is Codeium's AI-powered code editor.
+
+  ### Configuration
+
+  Add the following to your `~/.codeium/windsurf/mcp_config.json` file:
+
+  <CodeGroup>
+
+  ```text macOS
+  ~/.codeium/windsurf/mcp_config.json
+  ```
+
+  ```text Linux
+  ~/.codeium/windsurf/mcp_config.json
+  ```
+
+  ```text Windows
+  %USERPROFILE%\.codeium\windsurf\mcp_config.json
+  ```
+
+  </CodeGroup>
+
+  ```json
+  {
+    "mcpServers": {
+      "datagouv": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "mcp-remote",
+          "https://mcp.data.gouv.fr/mcp"
+        ]
+      }
+    }
+  }
+  ```
+
+  Windsurf uses `npx mcp-remote` as a bridge to connect to HTTP MCP servers.
+</Accordion>
+
+<Accordion title="HuggingChat">
+  ## HuggingChat
+
+  HuggingChat is Hugging Face's web-based chatbot interface.
+
+  ### Configuration
+
+  1. **Access Settings**: In the chat interface, click the **+** icon, select **MCP Servers**, and click **Manage MCP Servers**
+
+  2. **Add Server**: Click the **+ Add Server** button in the server management window
+
+  3. **Configure the Server**:
+     - Enter a **Server Name** (e.g., "Data Gouv")
+     - Set the **Server URL** to `https://mcp.data.gouv.fr/mcp`
+     - Click **Add Server** to save
+
+  4. **Verify Connection**:
+     - Click the **Health Check** button on the new server card
+     - Verify it displays as **Connected**
+     - Ensure the toggle is activated to use the tools in your chat
+</Accordion>
+
+<Accordion title="IBM Bob">
+  ## IBM Bob
+
+  IBM Bob is an AI assistant that supports MCP servers through settings files.
+
+  ### Configuration
+
+  1. Click the settings icon in the Bob panel
+  2. Select the **MCP** tab
+  3. Click one of the following buttons:
+     - **Edit Global MCP**: Opens the global `mcp_settings.json` file
+     - **Edit Project MCP**: Opens the project-specific `.bob/mcp.json` file (Bob creates it if it doesn't exist)
+
+  4. Add the following configuration to either file:
+
+  ```json
+  {
+    "mcpServers": {
+      "datagouv": {
+        "url": "https://mcp.data.gouv.fr/mcp",
+        "type": "streamable-http"
+      }
+    }
+  }
+  ```
+
+  Both files use the same JSON format with an `mcpServers` object containing named server configurations.
+</Accordion>
+
+<Accordion title="Kiro CLI">
+  ## Kiro CLI
+
+  Kiro CLI is a command-line interface for AI interactions.
+
+  ### Configuration
+
+  Add the following to your `~/.kiro/settings/mcp.json` file:
+
+  <CodeGroup>
+
+  ```text macOS
+  ~/.kiro/settings/mcp.json
+  ```
+
+  ```text Linux
+  ~/.kiro/settings/mcp.json
+  ```
+
+  ```text Windows
+  %USERPROFILE%\.kiro\settings\mcp.json
+  ```
+
+  </CodeGroup>
+
+  ```json
+  {
+    "mcpServers": {
+      "datagouv": {
+        "url": "https://mcp.data.gouv.fr/mcp"
+      }
+    }
+  }
+  ```
+</Accordion>
+
+<Accordion title="Kiro IDE">
+  ## Kiro IDE
+
+  Kiro IDE supports MCP servers through workspace or global configuration files.
+
+  ### Configuration
+
+  Add the following to your Kiro MCP configuration file:
+
+  - **Workspace config**: `.kiro/settings/mcp.json` in your workspace
+  - **Global config**:
+
+  <CodeGroup>
+
+  ```text macOS
+  ~/.kiro/settings/mcp.json
+  ```
+
+  ```text Linux
+  ~/.kiro/settings/mcp.json
+  ```
+
+  ```text Windows
+  %USERPROFILE%\.kiro\settings\mcp.json
+  ```
+
+  </CodeGroup>
+
+  ```json
+  {
+    "mcpServers": {
+      "datagouv": {
+        "url": "https://mcp.data.gouv.fr/mcp"
+      }
+    }
+  }
+  ```
+</Accordion>
+
+<Accordion title="Le Chat (Mistral)">
+  ## Le Chat (Mistral)
+
+  Le Chat is Mistral's web-based chatbot interface. MCP support is available on all plans, including free.
+
+  ### Configuration
+
+  1. **Go to Connectors**: Open Mistral in your browser, then go to **Intelligence** > **Connectors**
+
+  2. **Add a custom connector**:
+     - Click **Add connector** > **Custom MCP Connector**
+     - Give it a name (e.g., "DataGouv")
+     - Set the server URL to `https://mcp.data.gouv.fr/mcp`
+
+  3. **No authentication**: Leave authentication disabled
+
+  4. **Create**: Click **Create** to save the connector
+
+  The data.gouv.fr tools should now be available in your Le Chat conversations.
+</Accordion>
+
+<Accordion title="Mistral Vibe CLI">
+  ## Mistral Vibe CLI
+
+  Mistral Vibe is a command-line interface for Mistral's AI models.
+
+  ### Configuration
+
+  Edit your Vibe config file (default location):
+
+  <CodeGroup>
+
+  ```text macOS
+  ~/.vibe/config.toml
+  ```
+
+  ```text Linux
+  ~/.vibe/config.toml
+  ```
+
+  ```text Windows
+  %USERPROFILE%\.vibe\config.toml
+  ```
+
+  </CodeGroup>
+
+  Add the MCP server configuration:
+
+  ```toml
+  [[mcp_servers]]
+  name = "datagouv"
+  transport = "streamable-http"
+  url = "https://mcp.data.gouv.fr/mcp"
+  ```
+
+  Note that Mistral Vibe uses TOML format instead of JSON.
+
+  For more configuration options, see the [Mistral Vibe MCP documentation](https://github.com/mistralai/mistral-vibe?tab=readme-ov-file#mcp-server-configuration).
+</Accordion>
+
+## Self-hosting
+
+If you're running your own instance of the MCP server, replace `https://mcp.data.gouv.fr/mcp` with your server's URL in any of the configurations above.
+
+For local development, the default endpoint is `http://127.0.0.1:8000/mcp`.
+
+## Next steps
+
+- Learn about [available tools](/api/tools/overview) for datasets and dataservices
+- See [example queries](/guides/datasets) to get started
+- Review the [API reference](/api/tools/overview) for detailed documentation

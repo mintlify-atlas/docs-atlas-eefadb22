@@ -1,0 +1,201 @@
+---
+title: Working with datasets
+description: Search and explore datasets on data.gouv.fr
+---
+
+Datasets are collections of static data files published on data.gouv.fr. Each dataset can contain multiple resources (files) in various formats like CSV, JSON, Excel, and more.
+
+## Understanding the workflow
+
+Working with datasets follows a natural progression:
+
+<Steps>
+  <Step title="Search for datasets">
+    Use `search_datasets` to find datasets by keywords
+  </Step>
+  <Step title="Get dataset details">
+    Use `get_dataset_info` to view complete metadata
+  </Step>
+  <Step title="List resources">
+    Use `list_dataset_resources` to see all files in the dataset
+  </Step>
+  <Step title="Get resource details">
+    Use `get_resource_info` to check file format, size, and API availability
+  </Step>
+  <Step title="Query or download data">
+    Use `query_resource_data` or `download_and_parse_resource` to access the data
+  </Step>
+</Steps>
+
+## Searching for datasets
+
+The `search_datasets` tool is your starting point for discovering data on data.gouv.fr.
+
+### Query optimization
+
+The data.gouv.fr API uses strict AND logic for searches, meaning all query terms must match. To improve results, the server automatically removes common stop words that rarely appear in dataset metadata:
+
+- Generic terms: "données", "donnee", "fichier", "tableau"
+- Format names: "csv", "excel", "xlsx", "json", "xml"
+
+**Best practices:**
+- Use specific, descriptive terms
+- Avoid generic words like "data" or "file"
+- Use domain-specific keywords (e.g., "immobilier", "population", "transport")
+
+### Search parameters
+
+```python
+search_datasets(
+    query: str,           # Search keywords (required)
+    page: int = 1,        # Page number
+    page_size: int = 20   # Results per page (max: 100)
+)
+```
+
+### Example searches
+
+```python
+# Search for real estate data
+search_datasets(query="prix immobilier")
+
+# Search for population data with pagination
+search_datasets(query="population paris", page=1, page_size=50)
+
+# Search by organization
+search_datasets(query="Insee")
+```
+
+## Getting dataset information
+
+Once you've found a dataset, use `get_dataset_info` to retrieve complete metadata.
+
+### Returned information
+
+- Title and description (short and full)
+- Dataset ID and slug
+- Organization details
+- Tags and keywords
+- Number of resources
+- Creation and update dates
+- License information
+- Update frequency
+
+```python
+get_dataset_info(dataset_id="53699934a3a729239d203a52")
+```
+
+## Listing resources
+
+Datasets contain one or more resources (files). Use `list_dataset_resources` to see all available files.
+
+### Resource metadata
+
+For each resource, you'll receive:
+
+- Resource ID (needed for data queries)
+- Title and description
+- File format (CSV, JSON, XLSX, etc.)
+- File size (formatted in B, KB, MB, or GB)
+- MIME type
+- Resource type
+- Download URL
+
+```python
+list_dataset_resources(dataset_id="53699934a3a729239d203a52")
+```
+
+<Note>
+  File sizes are automatically formatted for readability:
+  - Less than 1 KB: shown in bytes
+  - Less than 1 MB: shown in kilobytes
+  - Less than 1 GB: shown in megabytes
+  - 1 GB or more: shown in gigabytes
+</Note>
+
+## Checking resource details
+
+Before querying data, use `get_resource_info` to understand the resource's characteristics and determine the best access method.
+
+### Tabular API availability
+
+The tool checks whether a resource is available via the Tabular API by:
+
+1. Checking if the resource is in the exceptions list (large files with special support)
+2. Attempting to fetch the resource profile
+3. Reporting availability status with indicators:
+   - ✅ Available via Tabular API (can be queried)
+   - ✅ Available via Tabular API (large file exception)
+   - ⚠️ Not available via Tabular API (may not be tabular data)
+
+### Resource information includes
+
+- Format and MIME type
+- File size
+- Download URL
+- Description
+- Associated dataset details
+- Tabular API compatibility
+
+```python
+get_resource_info(resource_id="3b6b2281-b9d9-4959-ae9d-c2c166dff118")
+```
+
+<Tip>
+  Use `get_resource_info` to decide between `query_resource_data` (for Tabular API-compatible resources) and `download_and_parse_resource` (for large files or unsupported formats).
+</Tip>
+
+## Common workflows
+
+### Finding and exploring a dataset
+
+<Steps>
+  <Step title="Search">
+    ```python
+    search_datasets(query="transport paris")
+    ```
+  </Step>
+  <Step title="Get details">
+    ```python
+    get_dataset_info(dataset_id="found-dataset-id")
+    ```
+  </Step>
+  <Step title="List files">
+    ```python
+    list_dataset_resources(dataset_id="found-dataset-id")
+    ```
+  </Step>
+  <Step title="Check file details">
+    ```python
+    get_resource_info(resource_id="found-resource-id")
+    ```
+  </Step>
+</Steps>
+
+### Working with large datasets
+
+For datasets with many resources or large files:
+
+1. Start with `list_dataset_resources` to see all files
+2. Use `get_resource_info` to check each file's size and format
+3. For CSV/XLSX files under API limits, use `query_resource_data`
+4. For larger files or other formats, use `download_and_parse_resource`
+
+<Warning>
+  The Tabular API has size limits:
+  - CSV files: ≤ 100 MB
+  - XLSX files: ≤ 12.5 MB
+  
+  Files exceeding these limits require `download_and_parse_resource`.
+</Warning>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Querying data" icon="database" href="/guides/querying-data">
+    Learn how to query and download resource data
+  </Card>
+  <Card title="Usage metrics" icon="chart-line" href="/guides/metrics">
+    Check dataset and resource usage statistics
+  </Card>
+</CardGroup>

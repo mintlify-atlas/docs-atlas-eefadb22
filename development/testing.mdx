@@ -1,0 +1,94 @@
+---
+title: Testing
+---
+
+The data.gouv.fr MCP Server uses two complementary testing approaches: automated tests with pytest and interactive testing with MCP Inspector.
+
+## Automated tests with pytest
+
+The project uses pytest with asyncio support to test helper modules and core functionality.
+
+### Running tests
+
+Run all tests:
+
+```bash
+uv run pytest
+```
+
+Run with verbose output:
+
+```bash
+uv run pytest -v
+```
+
+Run a specific test file:
+
+```bash
+uv run pytest tests/test_tabular_api.py
+```
+
+### Test configuration
+
+You can customize test behavior using environment variables:
+
+```bash
+# Test with a custom resource ID
+RESOURCE_ID=3b6b2281-b9d9-4959-ae9d-c2c166dff118 uv run pytest tests/test_tabular_api.py
+
+# Test with production environment
+DATAGOUV_API_ENV=prod uv run pytest
+```
+
+### Test files
+
+The test suite covers several areas:
+
+- `tests/test_tabular_api.py` - Tabular API client tests
+- `tests/test_metrics_api.py` - Metrics API client tests
+- `tests/test_datagouv_api.py` - Main data.gouv.fr API client tests
+- `tests/test_crawler_api.py` - Crawler API client tests
+- `tests/test_health_endpoint.py` - Health endpoint tests
+- `tests/test_env_config.py` - Environment configuration tests
+
+<Note>
+The automated tests primarily cover helper modules. For comprehensive testing of the MCP server tools and endpoints, use MCP Inspector.
+</Note>
+
+## Interactive testing with MCP Inspector
+
+MCP Inspector provides an interactive way to test server tools and resources in real-time.
+
+### Prerequisites
+
+You need Node.js with `npx` available on your system.
+
+### Using MCP Inspector
+
+1. Start the MCP server locally (see [Running Locally](/setup/installation))
+
+2. In a separate terminal, launch the inspector:
+
+```bash
+npx @modelcontextprotocol/inspector --http-url "http://127.0.0.1:${MCP_PORT}/mcp"
+```
+
+<Note>
+Replace `${MCP_PORT}` with your actual port number (default is 8000). If you exposed the server on a different host or port, adjust the URL accordingly.
+</Note>
+
+### What you can test
+
+With MCP Inspector, you can:
+
+- Test all available MCP tools interactively
+- Inspect tool schemas and parameters
+- View real-time responses
+- Debug tool behavior with actual data.gouv.fr data
+- Test different parameter combinations
+
+This is especially useful for:
+- Testing search queries with `search_datasets` and `search_dataservices`
+- Verifying resource data retrieval with `query_resource_data`
+- Checking metadata responses from `get_dataset_info` and `get_resource_info`
+- Validating OpenAPI spec parsing with `get_dataservice_openapi_spec`

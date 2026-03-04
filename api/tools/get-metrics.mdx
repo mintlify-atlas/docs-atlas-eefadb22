@@ -1,0 +1,158 @@
+---
+title: get_metrics
+description: Get usage metrics (visits, downloads) for datasets and resources
+---
+
+Get usage metrics (visits, downloads) for a dataset or resource. Returns monthly statistics sorted by most recent first.
+
+## Parameters
+
+<ParamField path="dataset_id" type="string" optional>
+  The unique identifier of the dataset.
+  
+  At least one of `dataset_id` or `resource_id` must be provided. Can be used alone or together with `resource_id`.
+</ParamField>
+
+<ParamField path="resource_id" type="string" optional>
+  The unique identifier of the resource.
+  
+  At least one of `dataset_id` or `resource_id` must be provided. Can be used alone or together with `dataset_id`.
+</ParamField>
+
+<ParamField path="limit" type="integer" default={12}>
+  Number of monthly records to return.
+  
+  Minimum: 1, Maximum: 100. Results are sorted by month in descending order (most recent first).
+</ParamField>
+
+## Returns
+
+Returns a formatted text response containing:
+
+### For dataset metrics:
+- Dataset title and ID
+- Monthly statistics table:
+  - Month (YYYY-MM format)
+  - Visits count
+  - Downloads count
+- Total visits and downloads across all returned months
+
+### For resource metrics:
+- Resource title and ID
+- Monthly statistics table:
+  - Month (YYYY-MM format)
+  - Downloads count
+- Total downloads across all returned months
+
+Numbers are formatted with thousands separators for readability (e.g., "1,234,567").
+
+If no metrics are available, returns a message indicating no data.
+
+## Usage notes
+
+<Warning>
+This tool only works in the **production environment**. The Metrics API does not have a demo/preprod instance. If you try to use this tool with `DATAGOUV_API_ENV=demo`, you will receive an error.
+</Warning>
+
+### Environment requirement
+
+The tool checks the `DATAGOUV_API_ENV` environment variable:
+
+- ✅ `prod` (or unset): Metrics are available
+- ❌ `demo`: Returns error message
+
+### What metrics are tracked
+
+Dataset metrics include:
+
+- **Visits**: Page views of the dataset page on data.gouv.fr
+- **Downloads**: Total downloads of all resources in the dataset
+
+ Resource metrics include:
+
+- **Downloads**: Downloads of this specific resource file
+
+### Metrics sorting
+
+Metrics are always returned sorted by month in **descending order** (most recent first):
+
+```
+2026-02    1,234 visits, 567 downloads
+2026-01    1,100 visits, 523 downloads
+2025-12      980 visits, 445 downloads
+...
+```
+
+### Using both parameters
+
+You can provide both `dataset_id` and `resource_id` to get metrics for both in a single call. The tool will return two separate sections in the response.
+
+<Tip>
+Use the default `limit=12` to see one year of monthly metrics. Increase the limit if you need more historical data.
+</Tip>
+
+## Error handling
+
+The tool handles the following error cases:
+
+- **Demo environment**: Returns error message explaining Metrics API is only available in production
+- **No parameters**: Returns error if neither `dataset_id` nor `resource_id` is provided
+- **Empty IDs**: Returns error if provided IDs are empty strings
+- **Not found**: Returns appropriate error if dataset/resource doesn't exist
+- **Metadata fetch failures**: Continues with "Unknown" title if metadata cannot be fetched
+- **Metrics fetch failures**: Returns error message with details
+
+## Example workflows
+
+### Get dataset metrics
+
+```
+get_metrics(
+  dataset_id="abc123",
+  limit=12
+)
+```
+
+Returns visits and downloads for the dataset over the last 12 months.
+
+### Get resource metrics
+
+```
+get_metrics(
+  resource_id="xyz789",
+  limit=6
+)
+```
+
+Returns downloads for the resource over the last 6 months.
+
+### Get both dataset and resource metrics
+
+```
+get_metrics(
+  dataset_id="abc123",
+  resource_id="xyz789",
+  limit=12
+)
+```
+
+Returns both dataset-level metrics (visits + downloads) and resource-level metrics (downloads only).
+
+### Historical analysis
+
+```
+get_metrics(
+  dataset_id="abc123",
+  limit=100
+)
+```
+
+Returns up to 100 months of historical data for trend analysis.
+
+## Typical use cases
+
+- **Popularity analysis**: Identify most visited/downloaded datasets
+- **Trend analysis**: Track usage patterns over time
+- **Impact assessment**: Measure dataset reach and adoption
+- **Resource comparison**: Compare download counts between resources in a dataset
+- **Reporting**: Generate usage reports for stakeholders

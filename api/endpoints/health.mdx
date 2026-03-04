@@ -1,0 +1,162 @@
+---
+title: GET /health
+description: Health check endpoint for monitoring and Docker healthchecks
+---
+
+## Overview
+
+The `/health` endpoint provides a simple health check for the data.gouv.fr MCP server. This endpoint is used by monitoring systems, load balancers, and Docker healthchecks to verify that the server is running and responsive.
+
+## Endpoint Details
+
+<ParamField path="/health" type="GET">
+  Returns the current health status of the server
+</ParamField>
+
+### Request
+
+No parameters or headers are required. Simply send a GET request to the endpoint:
+
+```bash
+curl https://mcp.data.gouv.fr/health
+```
+
+### Response
+
+The endpoint returns a JSON object with the following fields:
+
+<ResponseField name="status" type="string" required>
+  Current status of the server. Always returns `"ok"` when the server is healthy.
+</ResponseField>
+
+<ResponseField name="timestamp" type="string" required>
+  ISO 8601 timestamp of when the health check was performed (in UTC timezone).
+</ResponseField>
+
+<ResponseField name="version" type="string" required>
+  Current version of the running server, managed by setuptools-scm. Returns `"unknown"` if the version cannot be determined.
+</ResponseField>
+
+## Response Format
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-03-04T10:30:45.123456+00:00",
+  "version": "1.2.3"
+}
+```
+
+### Response Headers
+
+- **Content-Type**: `application/json`
+- **Status Code**: `200 OK`
+
+## Example Usage
+
+### Basic Health Check
+
+```bash
+curl https://mcp.data.gouv.fr/health
+```
+
+**Response:**
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-03-04T10:30:45.123456+00:00",
+  "version": "1.2.3"
+}
+```
+
+### Docker Healthcheck
+
+You can use this endpoint in Docker healthchecks:
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+```
+
+### Monitoring Script
+
+Example monitoring script:
+
+```bash
+#!/bin/bash
+
+RESPONSE=$(curl -s https://mcp.data.gouv.fr/health)
+STATUS=$(echo $RESPONSE | jq -r '.status')
+
+if [ "$STATUS" = "ok" ]; then
+  echo "Server is healthy"
+  exit 0
+else
+  echo "Server health check failed"
+  exit 1
+fi
+```
+
+### Python Health Check
+
+```python
+import httpx
+
+response = httpx.get("https://mcp.data.gouv.fr/health")
+data = response.json()
+
+if data["status"] == "ok":
+    print(f"Server is healthy (version: {data['version']})")
+else:
+    print("Server health check failed")
+```
+
+## Use Cases
+
+### Monitoring Systems
+
+Integrate the health endpoint with monitoring tools like:
+
+- **Prometheus**: Use the endpoint as a blackbox exporter target
+- **Datadog**: Configure HTTP checks to poll this endpoint
+- **Nagios**: Create HTTP service checks
+- **UptimeRobot**: Monitor server availability
+
+### Load Balancers
+
+Configure load balancers to use this endpoint for health checks:
+
+- Remove unhealthy instances from the pool
+- Route traffic only to responsive servers
+- Automatic failover during deployments
+
+### Deployment Verification
+
+After deploying a new version:
+
+1. Check that the endpoint returns `200 OK`
+2. Verify the `version` field matches the deployed version
+3. Confirm the server is responding within acceptable latency
+
+## Monitoring vs. Tracking
+
+<Note>
+Unlike the `/mcp` endpoint, health check requests are **not tracked** by Matomo analytics. This ensures that monitoring systems don't inflate usage metrics.
+</Note>
+
+## Implementation Details
+
+The health endpoint is implemented at the ASGI middleware level, ensuring:
+
+- **Fast response**: No MCP protocol overhead
+- **Minimal processing**: Returns immediately without complex logic
+- **Always available**: Responds even if other parts of the system have issues
+
+The version number is retrieved from package metadata managed by `setuptools-scm`, which automatically generates version numbers based on Git tags.
+
+## Related Resources
+
+- [Deployment Guide](/setup/docker)
+- [Monitoring Best Practices](/development/architecture)
+- [API Overview](/api/endpoints/mcp)

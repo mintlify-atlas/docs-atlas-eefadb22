@@ -1,0 +1,224 @@
+---
+title: Architecture
+---
+
+The data.gouv.fr MCP Server is built on FastMCP and follows a modular architecture that separates API clients, MCP tools, and monitoring infrastructure.
+
+## Overall structure
+
+The server is organized into three main components:
+
+- **Main server** (`main.py`) - FastMCP server setup, transport configuration, and monitoring middleware
+- **Helpers** (`helpers/`) - API client modules for interacting with external services
+- **Tools** (`tools/`) - MCP tool implementations that expose functionality to AI assistants
+
+## Main server
+
+The main server (`main.py`) configures and runs the FastMCP server with HTTP transport.
+
+### FastMCP setup
+
+The server uses FastMCP with specific configuration:
+
+```python
+mcp = FastMCP(
+    "data.gouv.fr MCP server",
+    transport_security=transport_security,
+    stateless_http=True,
+)
+```
+
+Key features:
+- **Stateless HTTP mode**: Avoids "Session not found" errors with MCP clients that don't maintain session IDs properly (like Claude Code, Cline, OpenAI Codex)
+- **Transport security**: DNS rebinding protection and origin validation
+- **Single endpoint**: All MCP communication happens through `POST /mcp`
+
+### Transport security
+
+The server implements DNS rebinding protection as required by the MCP specification:
+
+```python
+transport_security = TransportSecuritySettings(
+    enable_dns_rebinding_protection=True,
+    allowed_hosts=[
+        "mcp.data.gouv.fr",
+        "mcp.preprod.data.gouv.fr",
+        "localhost:*",
+        "127.0.0.1:*",
+    ],
+    allowed_origins=[
+        "https://mcp.data.gouv.fr",
+        "https://mcp.preprod.data.gouv.fr",
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+    ],
+)
+```
+
+This validates the Origin header to prevent DNS rebinding attacks, as required by the MCP specification.
+
+### Monitoring middleware
+
+The `with_monitoring()` function wraps the FastMCP app to add:
+
+- **Health endpoint**: `GET /health` returns server status and version
+- **Matomo tracking**: Tracks requests to `/mcp` in the background
+- **Request logging**: Logs all HTTP requests
+
+## Helpers directory
+
+The `helpers/` directory contains API client modules that interact with external services:
+
+- `datagouv_api_client.py` - Main data.gouv.fr API client (datasets, dataservices, resources)
+- `tabular_api_client.py` - Tabular API for querying structured data from resources
+- `metrics_api_client.py` - Metrics API for dataset and resource analytics
+- `crawler_api_client.py` - Crawler API for downloading and parsing resources
+- `matomo.py` - Matomo analytics tracking
+- `sentry.py` - Sentry error and performance monitoring
+- `env_config.py` - Environment configuration and URL management
+
+Each client module:
+- Uses `httpx.AsyncClient` for async HTTP requests
+- Handles session management (can accept an existing session or create its own)
+- Implements error handling and logging
+- Respects environment configuration (prod vs. demo)
+
+### Example: data.gouv.fr API client
+
+The main API client provides functions for:
+
+```python
+# Datasets
+await search_datasets(query, page, page_size)
+await get_dataset_details(dataset_id)
+await get_dataset_metadata(dataset_id)
+await get_resources_for_dataset(dataset_id)
+
+# Resources
+await get_resource_details(resource_id)
+await get_resource_metadata(resource_id)
+
+# Dataservices
+await search_dataservices(query, page, page_size)
+await get_dataservice_details(dataservice_id)
+await fetch_openapi_spec(url)
+```
+
+## Tools directory
+
+The `tools/` directory contains MCP tool implementations. Each tool is in its own file and registers itself with FastMCP.
+
+### Available tools
+
+**Dataset tools:**
+- `search_datasets.py` - Search for datasets by keywords
+- `get_dataset_info.py` - Get detailed dataset information
+- `list_dataset_resources.py` - List all resources in a dataset
+
+**Resource tools:**
+- `get_resource_info.py` - Get detailed resource information
+- `query_resource_data.py` - Query data from resources via Tabular API
+- `download_and_parse_resource.py` - Download and parse resources directly
+
+**Dataservice tools:**
+- `search_dataservices.py` - Search for external APIs
+- `get_dataservice_info.py` - Get dataservice metadata
+- `get_dataservice_openapi_spec.py` - Fetch and summarize OpenAPI specs
+
+**Metrics tools:**
+- `get_metrics.py` - Get usage metrics for datasets and resources
+
+### Tool registration
+
+Tools are registered in `tools/__init__.py`:
+
+```python
+def register_tools(mcp: FastMCP) -> None:
+    register_search_datasets_tool(mcp)
+    register_search_dataservices_tool(mcp)
+    register_get_dataservice_info_tool(mcp)
+    # ... all other tools
+```
+
+Each tool module exports a `register_*_tool()` function that uses the `@mcp.tool()` decorator to register the tool with FastMCP.
+
+## Monitoring integration
+
+### Matomo analytics
+
+Matomo tracking is integrated into the monitoring middleware:
+
+- Tracks all requests to `/mcp`
+- Runs asynchronously in the background (doesn't block responses)
+- Captures user-agent and request metadata
+- Fails silently if tracking fails
+
+### Sentry error monitoring
+
+Sentry is initialized at startup (`init_sentry()`) and provides:
+
+- Error tracking and reporting
+- Performance monitoring with configurable sample rates
+- Environment-specific tagging (local, preprod, prod)
+- No PII (Personally Identifiable Information) collection
+
+Sentry is disabled by default - enable it by setting the `SENTRY_DSN` environment variable.
+
+## Environment configuration
+
+The server supports multiple environments:
+
+- **Production**: `DATAGOUV_API_ENV=prod` (default) - uses https://www.data.gouv.fr
+- **Demo**: `DATAGOUV_API_ENV=demo` - uses https://demo.data.gouv.fr
+
+Environment variables control:
+- `MCP_HOST` - Host to bind to (default: `0.0.0.0`, use `127.0.0.1` for local dev)
+- `MCP_PORT` - Port for HTTP server (default: `8000`)
+- `MCP_ENV` - Environment name reported to Sentry (default: `local`)
+- `LOG_LEVEL` - Python logging level (default: `INFO`)
+- `SENTRY_DSN` - Sentry DSN for monitoring (optional)
+- `SENTRY_SAMPLE_RATE` - Sampling rate for traces/profiles (default: `1.0`)
+
+## Architecture diagram
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     MCP Clients                         │
+│   (Claude, ChatGPT, Gemini, VS Code, etc.)             │
+└────────────────────┬────────────────────────────────────┘
+                     │ HTTP (Streamable)
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│                  Monitoring Middleware                  │
+│  - Health endpoint (/health)                           │
+│  - Matomo tracking                                      │
+│  - Request logging                                      │
+└────────────────────┬────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────────────────┐
+│                   FastMCP Server                        │
+│  - Transport security (DNS rebinding protection)       │
+│  - Stateless HTTP mode                                 │
+│  - Tool registration and routing                       │
+└────────────────────┬────────────────────────────────────┘
+                     ↓
+         ┌───────────┴───────────┐
+         ↓                       ↓
+┌─────────────────┐     ┌─────────────────┐
+│     Tools       │     │    Helpers      │
+│  - Datasets     │────→│  - API clients  │
+│  - Resources    │     │  - HTTP logic   │
+│  - Dataservices │     │  - Error        │
+│  - Metrics      │     │    handling     │
+└─────────────────┘     └────────┬────────┘
+                                 ↓
+                    ┌────────────────────────┐
+                    │   External Services    │
+                    │  - data.gouv.fr API   │
+                    │  - Tabular API        │
+                    │  - Metrics API        │
+                    │  - Crawler API        │
+                    │  - Matomo             │
+                    │  - Sentry             │
+                    └────────────────────────┘
+```

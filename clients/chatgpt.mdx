@@ -1,0 +1,95 @@
+---
+title: Connect ChatGPT
+description: Set up ChatGPT with the data.gouv.fr MCP server
+---
+
+<Note>
+MCP server connections are only available for paid ChatGPT plans: Plus, Pro, Team, and Enterprise.
+</Note>
+
+ChatGPT supports MCP servers through custom connectors in the web interface. Follow these steps to connect the data.gouv.fr MCP server.
+
+<Steps>
+  <Step title="Access settings">
+    Open ChatGPT in your browser and navigate to **Settings**.
+
+    From the settings menu, go to **Apps and connectors**.
+  </Step>
+
+  <Step title="Enable Developer mode">
+    In the settings sidebar, open **Advanced settings**.
+
+    Toggle **Developer mode** to enable it. This allows you to add custom MCP connectors.
+  </Step>
+
+  <Step title="Add a new connector">
+    Return to **Settings** > **Connectors**.
+
+    Click **Browse connectors**, then click **Add a new connector**.
+  </Step>
+
+  <Step title="Configure the data.gouv.fr connector">
+    In the connector configuration screen:
+
+    1. Set the **URL** to:
+       ```
+       https://mcp.data.gouv.fr/mcp
+       ```
+
+    2. Optionally, give the connector a descriptive name like "data.gouv.fr"
+
+    3. Click **Save** to activate the connector
+  </Step>
+
+  <Step title="Verify the connection">
+    The connector should now appear in your list of active connectors.
+
+    You can verify it's working by starting a new conversation and asking:
+
+    > "What tools do you have for searching French open data?"
+
+    ChatGPT should list the available data.gouv.fr tools like `search_datasets`, `get_dataset_info`, and others.
+  </Step>
+</Steps>
+
+## Using the tools
+
+Once connected, you can ask ChatGPT questions about French open data:
+
+- "Search for datasets about public transportation in Paris"
+- "Show me recent datasets about housing prices"
+- "Find APIs related to geographic data"
+
+ChatGPT will automatically use the appropriate data.gouv.fr tools to answer your questions.
+
+## Self-hosting
+
+If you're running your own instance of the MCP server, replace `https://mcp.data.gouv.fr/mcp` with your server's URL in the connector configuration.
+
+For local development, use `http://127.0.0.1:8000/mcp` (or your custom port).
+
+## Troubleshooting
+
+### Connector not working
+
+If the connector doesn't appear to be working:
+
+1. Verify you have a paid ChatGPT plan (Plus, Pro, Team, or Enterprise)
+2. Check that Developer mode is enabled in Advanced settings
+3. Ensure the URL is correct: `https://mcp.data.gouv.fr/mcp`
+4. Try removing and re-adding the connector
+5. Refresh your browser and start a new conversation
+
+### Tools not appearing
+
+If ChatGPT doesn't recognize the tools:
+
+- Make sure the connector is saved and active
+- Try explicitly mentioning "data.gouv.fr" in your question
+- Check that you're in a new conversation (tools may not appear in existing chats)
+
+## Next steps
+
+- Explore [available tools](/api/tools/overview) for datasets and dataservices
+- See [example queries](/guides/datasets) to get started
+- Review the [API reference](/api/tools/overview) for detailed tool documentation

@@ -1,0 +1,116 @@
+---
+title: Connect Claude
+description: Set up Claude Desktop and Claude Code with the data.gouv.fr MCP server
+---
+
+Claude Desktop and Claude Code are Anthropic's AI assistant applications. Both support MCP servers and can connect to the data.gouv.fr endpoint.
+
+<Tabs>
+  <Tab title="Claude Desktop">
+    ## Setup for Claude Desktop
+
+    Claude Desktop uses a JSON configuration file to manage MCP server connections.
+
+    ### 1. Locate the configuration file
+
+    The configuration file location depends on your operating system:
+
+    <CodeGroup>
+
+    ```text macOS
+    ~/Library/Application Support/Claude/claude_desktop_config.json
+    ```
+
+    ```text Linux
+    ~/.config/Claude/claude_desktop_config.json
+    ```
+
+    ```text Windows
+    %APPDATA%\Claude\claude_desktop_config.json
+    ```
+
+    </CodeGroup>
+
+    ### 2. Add the MCP server configuration
+
+    Open the configuration file in a text editor and add the following configuration:
+
+    ```json
+    {
+      "mcpServers": {
+        "datagouv": {
+          "command": "npx",
+          "args": [
+            "mcp-remote",
+            "https://mcp.data.gouv.fr/mcp"
+          ]
+        }
+      }
+    }
+    ```
+
+    If you already have other MCP servers configured, add the `"datagouv"` entry inside the existing `"mcpServers"` object.
+
+    ### 3. Restart Claude Desktop
+
+    Close and reopen Claude Desktop to apply the changes. The data.gouv.fr tools should now be available in your conversations.
+
+    ### Verify the connection
+
+    You can verify the connection by asking Claude:
+
+    > "What tools do you have available for data.gouv.fr?"
+
+    Claude should list the available tools like `search_datasets`, `get_dataset_info`, etc.
+
+  </Tab>
+  <Tab title="Claude Code">
+    ## Setup for Claude Code
+
+    Claude Code is Anthropic's command-line interface for Claude. Setting up the MCP server is done via the `claude mcp` command.
+
+    ### Add the MCP server
+
+    Run the following command in your terminal:
+
+    ```shell
+    claude mcp add --transport http datagouv https://mcp.data.gouv.fr/mcp
+    ```
+
+    This command:
+    - Adds a new MCP server named `datagouv`
+    - Uses HTTP transport
+    - Connects to the hosted endpoint at `https://mcp.data.gouv.fr/mcp`
+
+    ### Verify the connection
+
+    You can verify the server was added by listing your configured MCP servers:
+
+    ```shell
+    claude mcp list
+    ```
+
+    The output should include `datagouv` in the list of configured servers.
+
+    ### Using the tools
+
+    Once configured, you can start using the data.gouv.fr tools in your conversations with Claude Code:
+
+    ```shell
+    claude "Search for datasets about energy consumption in France"
+    ```
+
+  </Tab>
+</Tabs>
+
+## Self-hosting
+
+If you're running your own instance of the MCP server instead of using the hosted endpoint, replace `https://mcp.data.gouv.fr/mcp` with your server's URL.
+
+For local development, the default endpoint is `http://127.0.0.1:8000/mcp`.
+
+## Next steps
+
+- Learn about [available tools](/api/tools/overview) you can use
+- See [example queries](/guides/datasets) to get started
+- Review the [API reference](/api/tools/overview) for advanced usage

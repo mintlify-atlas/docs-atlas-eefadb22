@@ -1,0 +1,81 @@
+---
+title: search_dataservices
+description: Search for dataservices (external APIs) on data.gouv.fr by keywords
+---
+
+Search for dataservices (external third-party APIs) registered on data.gouv.fr by keywords. Dataservices are APIs that provide programmatic access to data, unlike datasets which are static files.
+
+## Parameters
+
+<ParamField path="query" type="string" required>
+  Search keywords to find matching dataservices.
+  
+  The API uses AND logic, so all words must match. Generic words like "données" or "fichier" are automatically filtered out to improve results. Use short, specific queries for best results.
+</ParamField>
+
+<ParamField path="page" type="integer" default={1}>
+  Page number for pagination.
+  
+  Results are paginated with 20 items per page by default. Use this parameter to navigate through multiple pages of results.
+</ParamField>
+
+<ParamField path="page_size" type="integer" default={20}>
+  Number of results per page.
+  
+  Maximum: 100. Controls how many dataservices are returned in a single request.
+</ParamField>
+
+## Returns
+
+Returns a formatted text response containing:
+
+- Total number of matching dataservices
+- Current page number
+- For each dataservice:
+  - Title
+  - Dataservice ID
+  - Description (truncated to 200 characters)
+  - Organization name
+  - Base API URL
+  - Tags (up to 5)
+  - Dataservice URL on data.gouv.fr
+
+If no dataservices match the query, returns a message indicating no results were found.
+
+## Usage notes
+
+<Note>
+Dataservices are external third-party APIs (e.g., Adresse API, Sirene API) registered in the data.gouv.fr catalog. They are distinct from data.gouv.fr's own internal APIs that power the MCP server.
+</Note>
+
+### Automatic query cleaning
+
+The tool uses the same query cleaning as `search_datasets`. The following words are automatically filtered:
+
+- données, donnee, donnees
+- fichier, fichiers
+- tableau, tableaux
+- csv, excel, xlsx, json, xml
+
+If a cleaned query returns no results, the tool automatically retries with the original query.
+
+### Search tips
+
+- Use **specific keywords** related to the API topic (e.g., "adresse", "sirene", "cadastre")
+- Avoid generic words like "api" or "data"
+- Use French keywords for better results on the French data platform
+- Look for the base API URL in results to understand what the API provides
+
+## Example workflow
+
+Typical workflow: `search_dataservices` → `get_dataservice_info` → `get_dataservice_openapi_spec` → call the API using `base_api_url` per spec.
+
+1. Search for dataservices: "adresse"
+2. Get the dataservice ID from results
+3. Use `get_dataservice_info` to see metadata and documentation URLs
+4. Use `get_dataservice_openapi_spec` to understand available endpoints
+5. Call the API directly using the base URL and endpoint information
+
+<Tip>
+The base API URL in the results shows the root endpoint of the API. You'll need to fetch the OpenAPI spec with `get_dataservice_openapi_spec` to see all available endpoints and parameters.
+</Tip>

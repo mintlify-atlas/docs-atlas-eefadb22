@@ -1,0 +1,68 @@
+---
+title: list_dataset_resources
+description: List all resources (files) in a dataset with their metadata
+---
+
+List all resources (files) in a dataset with their metadata including resource ID, title, format, size, and URL.
+
+## Parameters
+
+<ParamField path="dataset_id" type="string" required>
+  The unique identifier of the dataset.
+  
+  This ID can be obtained from the `search_datasets` or `get_dataset_info` tool results.
+</ParamField>
+
+## Returns
+
+Returns a formatted text response containing:
+
+- Dataset title
+- Dataset ID
+- Total number of resources
+- For each resource:
+  - Resource title or name
+  - Resource ID
+  - File format (e.g., CSV, XLSX, JSON)
+  - File size in human-readable format (B, KB, MB, or GB)
+  - MIME type
+  - Resource type (e.g., main, documentation)
+  - Download URL
+
+If the dataset has no resources, returns a message indicating the dataset is empty.
+
+## Usage notes
+
+<Note>
+This is typically the second step after searching for datasets. Use this tool to see what files are available before accessing the actual data.
+</Note>
+
+### File size formatting
+
+File sizes are automatically formatted for readability:
+
+- **< 1 KB**: Displayed in bytes (e.g., "512 B")
+- **< 1 MB**: Displayed in kilobytes (e.g., "256.5 KB")
+- **< 1 GB**: Displayed in megabytes (e.g., "45.2 MB")
+- **≥ 1 GB**: Displayed in gigabytes (e.g., "2.1 GB")
+
+### Next steps
+
+After listing resources, choose the appropriate tool for data access:
+
+- **For CSV/XLSX files**: Use `query_resource_data` for fast querying via the Tabular API
+- **For JSON/JSONL files**: Use `download_and_parse_resource` to download and parse
+- **For large files**: Use `download_and_parse_resource` if the file exceeds Tabular API limits (CSV > 100 MB, XLSX > 12.5 MB)
+- **For detailed info**: Use `get_resource_info` to check Tabular API availability and get more metadata
+
+## Example workflow
+
+```
+1. search_datasets(query="population")
+2. list_dataset_resources(dataset_id="<id from search>")
+3. query_resource_data(resource_id="<id from list>", question="Show me the data")
+```
+
+<Tip>
+Use `get_resource_info` on a specific resource to check if it's available via the Tabular API before deciding which data access tool to use.
+</Tip>

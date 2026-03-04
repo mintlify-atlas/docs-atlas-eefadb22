@@ -1,0 +1,266 @@
+---
+title: Working with dataservices
+description: Discover and use external APIs registered on data.gouv.fr
+---
+
+Dataservices are external third-party APIs registered in the data.gouv.fr catalog. Unlike datasets (which are static files), dataservices provide programmatic access to live data through REST APIs.
+
+## What are dataservices?
+
+Dataservices represent external APIs such as:
+
+- **Adresse API**: Geocoding and address search
+- **Sirene API**: French business registry
+- **API Entreprise**: Company information
+- And many more third-party APIs
+
+<Note>
+  Dataservices are distinct from data.gouv.fr's internal APIs (Main API, Tabular API, Metrics API) that power the MCP server itself.
+</Note>
+
+## Understanding the workflow
+
+Working with dataservices follows a clear progression:
+
+<Steps>
+  <Step title="Search for APIs">
+    Use `search_dataservices` to find APIs by keywords
+  </Step>
+  <Step title="Get API details">
+    Use `get_dataservice_info` to view metadata and documentation URLs
+  </Step>
+  <Step title="Fetch OpenAPI specification">
+    Use `get_dataservice_openapi_spec` to understand available endpoints
+  </Step>
+  <Step title="Call the API">
+    Use the `base_api_url` to make requests according to the spec
+  </Step>
+</Steps>
+
+## Searching for dataservices
+
+The `search_dataservices` tool helps you discover available APIs.
+
+### Query optimization
+
+Like dataset searches, dataservice searches use AND logic. The server automatically removes common stop words:
+
+- Generic terms: "données", "fichier", "tableau"
+- Format names: "csv", "excel", "json"
+
+**Best practices:**
+- Use specific API names (e.g., "adresse", "sirene", "entreprise")
+- Search by service type (e.g., "geocoding", "business registry")
+- Use organization names
+
+### Search parameters
+
+```python
+search_dataservices(
+    query: str,           # Search keywords (required)
+    page: int = 1,        # Page number
+    page_size: int = 20   # Results per page (max: 100)
+)
+```
+
+### Example searches
+
+```python
+# Search for address APIs
+search_dataservices(query="adresse")
+
+# Search for business data APIs
+search_dataservices(query="entreprise sirene")
+
+# Search with pagination
+search_dataservices(query="api", page=1, page_size=50)
+```
+
+### Search results include
+
+- Dataservice ID
+- Title and description
+- Organization name
+- Base API URL
+- Tags
+- Dataservice page URL
+
+## Getting dataservice information
+
+Use `get_dataservice_info` to retrieve complete metadata for a specific API.
+
+### Metadata includes
+
+- **Title and description**: What the API does
+- **Base API URL**: The root endpoint for API calls
+- **OpenAPI/Swagger spec URL**: Machine-readable API documentation
+- **Organization**: Who provides the API
+- **Tags**: Categorization keywords
+- **License**: Usage terms
+- **Dates**: Creation and last update timestamps
+- **Related datasets**: Number of associated datasets
+
+```python
+get_dataservice_info(dataservice_id="5c34944634a61845ddde5f46")
+```
+
+<Tip>
+  The `machine_documentation_url` field points to an OpenAPI or Swagger specification that describes all available endpoints and parameters.
+</Tip>
+
+## Understanding OpenAPI specifications
+
+The `get_dataservice_openapi_spec` tool fetches and summarizes the API's OpenAPI/Swagger specification.
+
+### What you'll get
+
+The tool provides a concise summary of:
+
+- **API information**: Title, version, and description
+- **Base URLs/servers**: Where to send requests
+- **Endpoints**: Available paths and HTTP methods
+- **Parameters**: Required and optional parameters for each endpoint
+  - Parameter name
+  - Location (query, path, header, etc.)
+  - Data type
+  - Whether it's required
+
+```python
+get_dataservice_openapi_spec(dataservice_id="5c34944634a61845ddde5f46")
+```
+
+### Specification formats
+
+The tool supports both:
+
+- **OpenAPI 3.x**: Modern specification format with `servers` array
+- **OpenAPI 2.0 (Swagger)**: Older format with `host` and `basePath` fields
+
+### Example output structure
+
+```
+API: Adresse API
+Version: 1.0
+Description: Geocoding and address search API...
+
+Base URL: https://api-adresse.data.gouv.fr
+
+Endpoints (5 paths):
+  GET /search
+    Search for addresses
+      - q [query, string] (required)
+      - limit [query, integer]
+      - lat [query, number]
+      - lon [query, number]
+  
+  GET /reverse
+    Reverse geocoding
+      - lat [query, number] (required)
+      - lon [query, number] (required)
+```
+
+<Note>
+  If a dataservice has no `machine_documentation_url`, the tool will inform you and provide the `base_api_url` if available.
+</Note>
+
+## Using dataservice APIs
+
+After understanding the API specification, you can make requests to the `base_api_url`.
+
+### Typical workflow
+
+<Steps>
+  <Step title="Get the base URL">
+    From `get_dataservice_info`, note the `base_api_url`
+  </Step>
+  <Step title="Review endpoints">
+    Use `get_dataservice_openapi_spec` to see available paths
+  </Step>
+  <Step title="Construct requests">
+    Combine the base URL with endpoint paths and required parameters
+  </Step>
+  <Step title="Make API calls">
+    Use HTTP clients to send requests per the specification
+  </Step>
+</Steps>
+
+### Example: Using an address API
+
+```python
+# 1. Search for the API
+search_dataservices(query="adresse")
+
+# 2. Get API details
+get_dataservice_info(dataservice_id="5c34944634a61845ddde5f46")
+# Returns: base_api_url = "https://api-adresse.data.gouv.fr"
+
+# 3. Get OpenAPI spec
+get_dataservice_openapi_spec(dataservice_id="5c34944634a61845ddde5f46")
+# Returns: GET /search with parameter 'q' (required)
+
+# 4. Call the API
+# Make request to: https://api-adresse.data.gouv.fr/search?q=8+bd+du+port
+```
+
+## Common use cases
+
+### Finding geolocation APIs
+
+```python
+# Search for geocoding services
+search_dataservices(query="geocoding")
+
+# Or search for address APIs
+search_dataservices(query="adresse")
+```
+
+### Exploring business data APIs
+
+```python
+# Search for company information APIs
+search_dataservices(query="entreprise")
+
+# Search for specific registries
+search_dataservices(query="sirene")
+```
+
+### Checking API documentation
+
+```python
+# Get full metadata including documentation URLs
+get_dataservice_info(dataservice_id="api-id")
+
+# Get machine-readable specification
+get_dataservice_openapi_spec(dataservice_id="api-id")
+```
+
+<Warning>
+  Each dataservice is maintained by its provider. Authentication requirements, rate limits, and usage terms vary by API. Check the API's documentation for specific requirements.
+</Warning>
+
+## Related datasets
+
+Many dataservices are associated with related datasets. The `get_dataservice_info` tool shows the total number of related datasets.
+
+```python
+# Get dataservice info
+get_dataservice_info(dataservice_id="api-id")
+# Returns: "Related datasets: 5"
+```
+
+These related datasets often contain:
+- Static snapshots of the API data
+- Reference documentation
+- Example data files
+- Historical archives
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Working with datasets" icon="database" href="/guides/datasets">
+    Learn how to search and explore static datasets
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/tools/overview">
+    View detailed API documentation
+  </Card>
+</CardGroup>

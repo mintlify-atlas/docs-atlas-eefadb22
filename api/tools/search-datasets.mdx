@@ -1,0 +1,76 @@
+---
+title: search_datasets
+description: Search for datasets on data.gouv.fr by keywords
+---
+
+Search for datasets on data.gouv.fr by keywords. This is typically the first step in exploring data.gouv.fr.
+
+## Parameters
+
+<ParamField path="query" type="string" required>
+  Search keywords to find matching datasets.
+  
+  The API uses AND logic, so all words must match. Generic words like "données" or "fichier" are automatically filtered out to improve results. Use short, specific queries for best results.
+</ParamField>
+
+<ParamField path="page" type="integer" default={1}>
+  Page number for pagination.
+  
+  Results are paginated with 20 items per page by default. Use this parameter to navigate through multiple pages of results.
+</ParamField>
+
+<ParamField path="page_size" type="integer" default={20}>
+  Number of results per page.
+  
+  Maximum: 100. Controls how many datasets are returned in a single request.
+</ParamField>
+
+## Returns
+
+Returns a formatted text response containing:
+
+- Total number of matching datasets
+- Current page number
+- For each dataset:
+  - Title
+  - Dataset ID
+  - Short description (truncated to 200 characters)
+  - Organization name
+  - Tags (up to 5)
+  - Number of resources (files)
+  - Dataset URL
+
+If no datasets match the query, returns a message indicating no results were found.
+
+## Usage notes
+
+<Note>
+The search uses strict AND logic. All query words must appear in the dataset metadata. Generic stop words are automatically removed to prevent zero results.
+</Note>
+
+### Automatic query cleaning
+
+The following words are automatically filtered from queries because they're generic and often not present in dataset metadata:
+
+- données, donnee, donnees
+- fichier, fichiers
+- tableau, tableaux
+- csv, excel, xlsx, json, xml
+
+If a cleaned query returns no results, the tool automatically retries with the original query.
+
+### Search tips
+
+- Use **specific keywords** related to the topic (e.g., "immobilier paris" instead of "données immobilier")
+- Avoid generic words like "data" or "file"
+- Try singular and plural forms if you get no results
+- Use French keywords for better results on the French data platform
+
+## Example workflow
+
+Typical workflow: `search_datasets` → `list_dataset_resources` → `query_resource_data` (or `download_and_parse_resource` for large files).
+
+1. Search for datasets: "prix immobilier"
+2. Get the dataset ID from results
+3. Use `list_dataset_resources` to see available files
+4. Use `query_resource_data` or `download_and_parse_resource` to access the data

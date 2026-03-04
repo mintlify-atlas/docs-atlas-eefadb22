@@ -1,122 +1,99 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "data.gouv.fr MCP Server",
+  "theme": "aspen",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#000091",
+    "light": "#6A6AF4",
+    "dark": "#000091"
   },
-  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/datagouv/datagouv-mcp"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/datagouv/datagouv-mcp"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get Started",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "introduction",
+              "quickstart"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Setup",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "setup/installation",
+              "setup/docker",
+              "setup/configuration"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Client Connections",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "clients/overview",
+              "clients/claude",
+              "clients/chatgpt",
+              "clients/other-clients"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Guides",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "guides/datasets",
+              "guides/dataservices",
+              "guides/querying-data",
+              "guides/metrics"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "development/testing",
+              "development/contributing",
+              "development/architecture"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Endpoints",
             "pages": [
-              "api-reference/introduction"
+              "api/endpoints/mcp",
+              "api/endpoints/health"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "MCP Tools",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api/tools/overview",
+              "api/tools/search-datasets",
+              "api/tools/get-dataset-info",
+              "api/tools/list-dataset-resources",
+              "api/tools/get-resource-info",
+              "api/tools/query-resource-data",
+              "api/tools/download-and-parse-resource",
+              "api/tools/search-dataservices",
+              "api/tools/get-dataservice-info",
+              "api/tools/get-dataservice-openapi-spec",
+              "api/tools/get-metrics"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

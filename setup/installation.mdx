@@ -1,0 +1,134 @@
+---
+title: Installation
+description: Install and run the data.gouv.fr MCP server locally using uv
+---
+
+This guide walks you through installing and running the data.gouv.fr MCP server manually using the uv package manager.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- **Python 3.13+** installed on your system
+- **[uv](https://github.com/astral-sh/uv)** package manager installed
+
+## Installation Steps
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the repository and navigate to the project directory:
+
+    ```bash
+    git clone git@github.com:datagouv/datagouv-mcp.git
+    cd datagouv-mcp
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    Use uv to install all required Python dependencies:
+
+    ```bash
+    uv sync
+    ```
+
+    This command reads the project configuration and installs all dependencies specified in `pyproject.toml`.
+  </Step>
+
+  <Step title="Configure environment variables">
+    Copy the example environment file to create your own configuration:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    The `.env.example` file contains all available configuration options with sensible defaults. You can edit the `.env` file to customize settings for your environment.
+
+    Example `.env` configuration:
+
+    ```bash
+    MCP_HOST=127.0.0.1  # Bind to localhost for local development
+    MCP_PORT=8000       # HTTP server port
+    MCP_ENV=local       # Environment name for monitoring
+    DATAGOUV_API_ENV=prod  # Use production data.gouv.fr API
+    LOG_LEVEL=INFO      # Logging verbosity
+    ```
+
+    <Note>
+      For local development, set `MCP_HOST=127.0.0.1` to follow MCP security best practices. This ensures the server only accepts connections from your local machine.
+    </Note>
+
+    See the [Configuration](/setup/configuration) page for detailed information about all available environment variables.
+  </Step>
+
+  <Step title="Load environment variables">
+    Load the environment variables into your shell session:
+
+    ```bash
+    set -a && source .env && set +a
+    ```
+
+    This command exports all variables from the `.env` file to your current shell.
+  </Step>
+
+  <Step title="Start the server">
+    Run the MCP server:
+
+    ```bash
+    uv run main.py
+    ```
+
+    The server will start on the configured host and port (default: `http://127.0.0.1:8000`).
+  </Step>
+
+  <Step title="Verify the installation">
+    Test that the server is running by accessing the health endpoint:
+
+    ```bash
+    curl http://127.0.0.1:8000/health
+    ```
+
+    You should receive a JSON response like:
+
+    ```json
+    {
+      "status": "ok",
+      "timestamp": "2026-03-04T12:34:56.789Z",
+      "version": "1.0.0"
+    }
+    ```
+  </Step>
+</Steps>
+
+## Next Steps
+
+Now that you have the server running:
+
+- **Connect a chatbot**: Follow the connection instructions in the README to integrate with Claude, ChatGPT, or other MCP clients
+- **Configure advanced settings**: See the [Configuration](/setup/configuration) page for all available options
+- **Deploy with Docker**: Check out the [Docker deployment](/setup/docker) guide for production deployments
+
+## Troubleshooting
+
+### Port already in use
+
+If port 8000 is already in use, change the `MCP_PORT` in your `.env` file:
+
+```bash
+MCP_PORT=8007
+```
+
+### Python version issues
+
+Ensure you have Python 3.13 or higher:
+
+```bash
+python --version
+```
+
+### Dependencies installation fails
+
+Make sure uv is up to date:
+
+```bash
+pip install --upgrade uv
+```

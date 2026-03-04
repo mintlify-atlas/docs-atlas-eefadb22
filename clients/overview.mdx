@@ -1,0 +1,105 @@
+---
+title: Client connections
+description: Connect AI clients to the data.gouv.fr MCP server
+---
+
+## What are MCP clients?
+
+MCP clients are AI applications that support the Model Context Protocol (MCP). These clients can connect to MCP servers to access additional tools and data sources during conversations.
+
+The data.gouv.fr MCP server allows you to search, explore, and analyze datasets from France's national Open Data platform directly through AI conversations, without manually browsing the website.
+
+## Supported clients
+
+The data.gouv.fr MCP server supports a wide range of AI clients:
+
+- **[Claude Desktop and Claude Code](/clients/claude)** - Anthropic's desktop and CLI clients
+- **[ChatGPT](/clients/chatgpt)** - OpenAI's web-based chatbot (paid plans only)
+- **Gemini CLI** - Google's command-line interface
+- **Cursor** - AI-powered code editor
+- **VS Code** - Microsoft's code editor with MCP support
+- **Windsurf** - Codeium's AI-powered editor
+- **HuggingChat** - Hugging Face's web-based chatbot
+- **IBM Bob** - IBM's AI assistant
+- **Kiro CLI and Kiro IDE** - Kiro's command-line and IDE tools
+- **Le Chat (Mistral)** - Mistral's web-based chatbot
+- **Mistral Vibe CLI** - Mistral's command-line interface
+- **AnythingLLM** - Multi-model LLM interface
+
+For detailed setup instructions for Gemini, Cursor, VS Code, Windsurf, and other clients, see [Other AI clients](/clients/other-clients).
+
+## Hosted endpoint vs self-hosting
+
+### Using the hosted endpoint (recommended)
+
+The easiest way to connect is using the public hosted endpoint:
+
+```
+https://mcp.data.gouv.fr/mcp
+```
+
+This endpoint is available to everyone with no access restrictions or API keys required. The MCP server only exposes read-only tools, so no authentication is needed.
+
+### Self-hosting
+
+You can also run the MCP server locally on your own infrastructure. If you choose to self-host, simply replace `https://mcp.data.gouv.fr/mcp` with your own server URL in the configuration examples.
+
+For self-hosting instructions, see the [Run locally](/setup/installation) guide.
+
+## General MCP configuration structure
+
+Most MCP clients use JSON configuration files to connect to servers. The configuration structure varies by client, but typically includes:
+
+- **Server name** - A unique identifier for the server (e.g., `"datagouv"`)
+- **Connection method** - Either HTTP URL or command-based (using `npx mcp-remote`)
+- **Server URL** - The endpoint URL (`https://mcp.data.gouv.fr/mcp`)
+- **Transport type** - Usually `http`, `streamable`, or `streamable-http`
+
+### HTTP transport
+
+The data.gouv.fr MCP server uses **Streamable HTTP transport only**. STDIO and SSE transports are not supported.
+
+Some clients connect directly via HTTP URL:
+
+```json
+{
+  "mcpServers": {
+    "datagouv": {
+      "url": "https://mcp.data.gouv.fr/mcp",
+      "type": "streamable-http"
+    }
+  }
+}
+```
+
+### Command-based transport
+
+Other clients use `npx mcp-remote` as a bridge:
+
+```json
+{
+  "mcpServers": {
+    "datagouv": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://mcp.data.gouv.fr/mcp"
+      ]
+    }
+  }
+}
+```
+
+## Next steps
+
+Choose your client and follow the setup guide:
+
+- [Connect Claude Desktop or Claude Code](/clients/claude)
+- [Connect ChatGPT](/clients/chatgpt)
+- [Connect other AI clients](/clients/other-clients)
+
+Once connected, you can start asking questions like:
+
+- "Quels jeux de données sont disponibles sur les prix de l'immobilier ?"
+- "Montre-moi les dernières données de population pour Paris"
+- "Search for datasets about public transportation in Lyon"

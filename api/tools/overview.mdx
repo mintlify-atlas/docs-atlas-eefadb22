@@ -1,0 +1,98 @@
+---
+title: MCP tools overview
+description: Comprehensive guide to all tools available in the data.gouv.fr MCP server
+---
+
+The data.gouv.fr MCP server provides 10 tools that enable AI chatbots to search, explore, and analyze datasets from [data.gouv.fr](https://www.data.gouv.fr), the French national Open Data platform.
+
+<Note>
+These tools are called by AI chatbots through the Model Context Protocol (MCP), not directly by users. The chatbot interprets your natural language requests and calls the appropriate tools to fulfill them.
+</Note>
+
+## Tool categories
+
+The tools are organized into three categories:
+
+### Datasets
+
+Tools for working with static data files:
+
+- [search_datasets](/api/tools/search-datasets) - Search for datasets by keywords
+- [get_dataset_info](/api/tools/get-dataset-info) - Get detailed metadata about a dataset
+- [list_dataset_resources](/api/tools/list-dataset-resources) - List all files in a dataset
+- [get_resource_info](/api/tools/get-resource-info) - Get detailed information about a file
+- [query_resource_data](/api/tools/query-resource-data) - Query tabular data from CSV/XLSX files
+- [download_and_parse_resource](/api/tools/download-and-parse-resource) - Download and parse files directly
+
+### Dataservices
+
+Tools for working with external third-party APIs registered in the data.gouv.fr catalog:
+
+- [search_dataservices](/api/tools/search-dataservices) - Search for APIs by keywords
+- [get_dataservice_info](/api/tools/get-dataservice-info) - Get detailed metadata about an API
+- [get_dataservice_openapi_spec](/api/tools/get-dataservice-openapi-spec) - Fetch and summarize the OpenAPI specification
+
+### Metrics
+
+Tools for accessing usage statistics:
+
+- [get_metrics](/api/tools/get-metrics) - Get visit and download statistics for datasets and resources
+
+## Common workflows
+
+### Exploring datasets
+
+The typical workflow for finding and analyzing dataset data:
+
+1. **Search** - Use `search_datasets` to find datasets matching your keywords
+2. **Explore** - Use `list_dataset_resources` to see available files in a dataset
+3. **Preview** - Use `query_resource_data` (for CSV/XLSX) or `download_and_parse_resource` (for JSON/JSONL) to preview the data structure
+4. **Analyze** - Query or download the full data as needed
+
+### Working with APIs
+
+The typical workflow for discovering and using external APIs:
+
+1. **Search** - Use `search_dataservices` to find APIs matching your keywords
+2. **Get details** - Use `get_dataservice_info` to get metadata and documentation URLs
+3. **Understand the API** - Use `get_dataservice_openapi_spec` to see available endpoints and parameters
+4. **Call the API** - Use the `base_api_url` and endpoint information from the spec
+
+## Search query tips
+
+Both `search_datasets` and `search_dataservices` use AND logic for multi-word queries:
+
+- Use **short, specific keywords** for best results
+- Generic words like "données", "fichier", "csv" are automatically filtered out
+- If a query returns no results, try removing generic terms or using more specific keywords
+
+## Data access strategies
+
+The MCP server provides two ways to access tabular data:
+
+### Tabular API (query_resource_data)
+
+- **Best for**: CSV and XLSX files, exploratory analysis, filtered queries
+- **Advantages**: Fast, no download required, supports filtering and sorting
+- **Limitations**: CSV files ≤ 100 MB, XLSX files ≤ 12.5 MB, maximum 200 rows per request
+
+### Direct download (download_and_parse_resource)
+
+- **Best for**: JSON/JSONL files, large datasets, full data analysis
+- **Advantages**: Supports more formats (CSV, CSV.GZ, JSON, JSONL), handles larger files
+- **Limitations**: Downloads the entire file, slower for quick previews
+
+<Tip>
+For CSV/XLSX files, start with `query_resource_data` to preview the data structure with a small page size (20 rows). For large datasets requiring full analysis (>1000 rows), use `download_and_parse_resource` instead of paginating through many pages.
+</Tip>
+
+## Environment considerations
+
+<Warning>
+The `get_metrics` tool only works in the production environment. The Metrics API does not have a demo/preprod instance.
+</Warning>
+
+The server can connect to either:
+
+- **Production**: `https://www.data.gouv.fr` (default)
+- **Demo**: `https://demo.data.gouv.fr` (set `DATAGOUV_API_ENV=demo`)

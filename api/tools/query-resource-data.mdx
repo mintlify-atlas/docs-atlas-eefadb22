@@ -1,0 +1,167 @@
+---
+title: query_resource_data
+description: Query tabular data from a resource via the Tabular API
+---
+
+Query tabular data from a CSV or XLSX resource using the data.gouv.fr Tabular API. No download required.
+
+## Parameters
+
+<ParamField path="question" type="string" required>
+  Description of what data you're looking for.
+  
+  This parameter provides context for the query. It doesn't affect filtering but helps document the query purpose.
+</ParamField>
+
+<ParamField path="resource_id" type="string" required>
+  The unique identifier of the resource to query.
+  
+  This ID can be obtained from the `list_dataset_resources` or `get_resource_info` tool results.
+</ParamField>
+
+<ParamField path="page" type="integer" default={1}>
+  Page number for pagination.
+  
+  Use this to retrieve additional pages of data. Each page contains up to `page_size` rows.
+</ParamField>
+
+<ParamField path="page_size" type="integer" default={20}>
+  Number of rows to return per page.
+  
+  Minimum: 1, Maximum: 200. Start with the default (20) to preview data structure, then increase if needed.
+</ParamField>
+
+<ParamField path="filter_column" type="string" optional>
+  Name of the column to filter on.
+  
+  Must be used together with `filter_value`. Column names are case-sensitive.
+</ParamField>
+
+<ParamField path="filter_value" type="string" optional>
+  Value to filter for in the specified column.
+  
+  Must be used together with `filter_column`. The comparison operator is specified by `filter_operator`.
+</ParamField>
+
+<ParamField path="filter_operator" type="string" default="exact">
+  Comparison operator for filtering.
+  
+  Supported operators:
+  - `exact` - Exact match
+  - `contains` - Contains substring
+  - `less` - Less than or equal to
+  - `greater` - Greater than or equal to
+  - `strictly_less` - Strictly less than
+  - `strictly_greater` - Strictly greater than
+</ParamField>
+
+<ParamField path="sort_column" type="string" optional>
+  Name of the column to sort by.
+  
+  Column names are case-sensitive. Use with `sort_direction` to control sort order.
+</ParamField>
+
+<ParamField path="sort_direction" type="string" default="asc">
+  Sort direction for results.
+  
+  Supported values:
+  - `asc` - Ascending order
+  - `desc` - Descending order
+</ParamField>
+
+## Returns
+
+Returns a formatted text response containing:
+
+- Resource title and ID
+- Dataset title and ID
+- Question/query context
+- Applied filters and sorting (if any)
+- Total row count from Tabular API
+- Number of rows retrieved
+- Total pages and page size
+- Column names
+- All retrieved data rows with full content (values truncated to 100 characters if longer)
+- Pagination information (if more pages available)
+- For large datasets (>1000 rows): Warning about using `download_and_parse_resource` for full analysis
+
+## Usage notes
+
+<Note>
+This tool only works for CSV and XLSX files that are available via the Tabular API (CSV ≤ 100 MB, XLSX ≤ 12.5 MB). Use `get_resource_info` to check availability first.
+</Note>
+
+### Query strategy
+
+1. **Preview structure**: Start with default `page_size=20` to understand the data structure and column names
+2. **Small datasets** (&lt;500 rows): Increase `page_size` or paginate through all pages
+3. **Large datasets** (&gt;1000 rows): Use `download_and_parse_resource` for comprehensive analysis instead of paginating
+
+### Filtering and sorting
+
+You can combine filters and sorting:
+
+```
+filter_column="city"
+filter_value="Paris"
+filter_operator="exact"
+sort_column="population"
+sort_direction="desc"
+```
+
+This queries rows where city exactly matches "Paris", sorted by population in descending order.
+
+### Pagination tips
+
+- Check the "Total pages" in the response to know how many pages are available
+- The tool will indicate if more pages are available with a next page suggestion
+- For datasets >1000 rows, consider downloading the full file instead of paginating
+
+<Warning>
+For large datasets requiring full analysis, use `download_and_parse_resource` instead of paginating through many pages with this tool. The Tabular API is optimized for exploratory queries, not bulk data retrieval.
+</Warning>
+
+## Error handling
+
+The tool handles the following error cases:
+
+- **Invalid filter_operator**: Returns list of supported operators
+- **Invalid sort_direction**: Returns list of supported directions
+- **Resource not available**: Returns error if resource is not in Tabular API
+- **HTTP errors**: Returns status code and error details
+- **Empty results**: Returns warning if no rows match filters
+
+## Example workflows
+
+### Preview data structure
+
+```
+query_resource_data(
+  question="Show me a sample of the data",
+  resource_id="abc123",
+  page_size=20
+)
+```
+
+### Filter and sort
+
+```
+query_resource_data(
+  question="Find Paris population data sorted by year",
+  resource_id="abc123",
+  filter_column="city",
+  filter_value="Paris",
+  filter_operator="exact",
+  sort_column="year",
+  sort_direction="desc",
+  page_size=50
+)
+```
+
+### Paginate through results
+
+```
+1. query_resource_data(resource_id="abc123", page=1, page_size=100)
+2. query_resource_data(resource_id="abc123", page=2, page_size=100)
+3. Continue until no more pages available
+```

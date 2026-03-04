@@ -1,0 +1,114 @@
+---
+title: Contributing
+---
+
+We welcome contributions to the data.gouv.fr MCP Server! To keep the project stable and reviews manageable, please follow these guidelines.
+
+## Contribution rules
+
+### Keep it small
+
+We strictly follow a **1 feature = 1 PR** workflow. Each pull request should focus on a single feature, bug fix, or improvement.
+
+### Human review required
+
+Do not submit raw AI-generated code. All code must be reviewed and tested by a human prior to submission.
+
+## Pull request workflow
+
+We use a standard review-and-deploy process:
+
+1. **Submit a PR**: Propose your changes via a Pull Request against the `main` branch
+2. **Review**: All PRs must be reviewed and approved by a maintainer before merging
+3. **Automated deployment**: Once merged into `main`, changes will be automatically deployed to:
+   1. **[Pre-production](https://mcp.preprod.data.gouv.fr/)** for final validation
+   2. **[Production](https://mcp.data.gouv.fr/)**
+
+<Warning>
+Changes merged to main are automatically deployed to production. Ensure your code is thoroughly tested before submitting a PR.
+</Warning>
+
+## Code quality requirements
+
+This project follows PEP 8 style guidelines using [Ruff](https://astral.sh/ruff/) for linting and formatting, and [ty](https://docs.astral.sh/ty/) for type checking.
+
+**You must run these tools before submitting contributions** - either manually or using pre-commit hooks.
+
+### Linting and formatting with Ruff
+
+Ruff handles both linting (including import sorting) and code formatting:
+
+```bash
+# Lint and format code
+uv run ruff check --fix && uv run ruff format
+```
+
+This command will:
+- Fix linting issues automatically where possible
+- Sort imports according to project conventions
+- Format code to match the project style
+
+### Type checking with ty
+
+Run type checking to ensure type safety:
+
+```bash
+uv run ty check
+```
+
+## Pre-commit hooks
+
+The repository uses [pre-commit](https://pre-commit.com/) hooks to automatically check code quality before each commit. Installing the pre-commit hook is strongly recommended.
+
+### Install pre-commit hooks
+
+```bash
+uv run pre-commit install
+```
+
+### What the hooks do
+
+The pre-commit hooks automatically:
+- Check YAML syntax
+- Fix end-of-file issues
+- Remove trailing whitespace
+- Check for large files
+- Run Ruff linting and formatting
+
+<Note>
+Once installed, these checks run automatically on every commit. If any check fails, the commit will be blocked until you fix the issues.
+</Note>
+
+## Release process
+
+The project uses the `tag_version.sh` script to manage releases. This script creates git tags, GitHub releases, and updates the CHANGELOG automatically.
+
+### Prerequisites
+
+- [GitHub CLI](https://cli.github.com/) must be installed and authenticated
+- You must be on the main branch with a clean working directory
+
+### Creating a release
+
+```bash
+# Create a new release
+./tag_version.sh <version>
+
+# Example
+./tag_version.sh 2.5.0
+
+# Dry run to preview what would happen
+./tag_version.sh 2.5.0 --dry-run
+```
+
+### What the script does
+
+The `tag_version.sh` script automatically:
+- Extracts commits since the last tag and formats them for CHANGELOG.md
+- Identifies breaking changes (commits with `!:` in the subject)
+- Creates a git tag and pushes it to the remote repository
+- Creates a GitHub release with the changelog content
+
+### Versioning
+
+Package version numbers are automatically derived from git tags using [setuptools_scm](https://github.com/pypa/setuptools_scm). You don't need to manually update version numbers in `pyproject.toml`.

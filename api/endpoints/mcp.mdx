@@ -1,0 +1,185 @@
+---
+title: POST /mcp
+description: Main MCP JSON-RPC endpoint for the data.gouv.fr MCP server
+---
+
+## Overview
+
+The `/mcp` endpoint is the main entry point for all Model Context Protocol (MCP) communication. This endpoint implements the MCP JSON-RPC protocol using Streamable HTTP transport, allowing MCP clients to discover and invoke tools for interacting with data.gouv.fr.
+
+<Note>
+This endpoint is designed to be accessed by MCP clients (like Claude Desktop, Cline, or other AI assistants), not directly by end users. All communication follows the [MCP specification](https://modelcontextprotocol.io/).
+</Note>
+
+## Endpoint Details
+
+<ParamField path="/mcp" type="POST">
+  The main MCP JSON-RPC endpoint
+</ParamField>
+
+### Request Format
+
+All requests must be valid MCP JSON-RPC messages. The endpoint uses **Streamable HTTP transport**, which means:
+
+- Each request is a JSON-RPC 2.0 message
+- The server operates in **stateless mode** (no session management required)
+- Clients don't need to maintain `mcp-session-id` headers
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list",
+  "params": {}
+}
+```
+
+### Response Format
+
+Responses follow the JSON-RPC 2.0 specification:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tools": [
+      {
+        "name": "search_datasets",
+        "description": "Search for datasets on data.gouv.fr",
+        "inputSchema": { ... }
+      }
+    ]
+  }
+}
+```
+
+## Security
+
+The endpoint implements comprehensive security measures following MCP specification requirements:
+
+### DNS Rebinding Protection
+
+The server validates the `Host` header to prevent DNS rebinding attacks. Only requests from allowed hosts are accepted:
+
+- `mcp.data.gouv.fr` (production)
+- `mcp.preprod.data.gouv.fr` (pre-production)
+- `localhost:*` (local development)
+- `127.0.0.1:*` (local development)
+
+### Origin Validation
+
+The `Origin` header is validated to prevent cross-origin attacks. Allowed origins:
+
+- `https://mcp.data.gouv.fr`
+- `https://mcp.preprod.data.gouv.fr`
+- `http://localhost:*`
+- `http://127.0.0.1:*`
+
+<Warning>
+Requests with invalid `Host` or `Origin` headers will be rejected by the server.
+</Warning>
+
+## Stateless Mode
+
+This server operates in **stateless HTTP mode**, which means:
+
+- No server-initiated notifications
+- No session state maintained between requests
+- Clients don't need to track session IDs
+- Each request is independent and self-contained
+
+This design ensures compatibility with MCP clients that don't properly maintain session headers (like Claude Desktop, Cline, and OpenAI Codex).
+
+## Transport Details
+
+The endpoint uses **Streamable HTTP transport** as defined in the MCP specification:
+
+- **Protocol**: HTTP/1.1 or HTTP/2
+- **Method**: POST
+- **Content-Type**: `application/json`
+- **Encoding**: UTF-8
+
+## MCP Protocol Methods
+
+The following MCP methods are available through this endpoint:
+
+### Core Methods
+
+- `initialize` - Initialize the MCP session
+- `tools/list` - List all available tools
+- `tools/call` - Invoke a specific tool
+
+### Available Tools
+
+For a complete list of available tools, see the [Tools documentation](/api/tools/overview).
+
+## Example Usage
+
+<Note>
+Most users won't interact with this endpoint directly. Instead, you'll configure your MCP client to connect to this server.
+</Note>
+
+### MCP Client Configuration
+
+Add the data.gouv.fr MCP server to your MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "datagouv": {
+      "url": "https://mcp.data.gouv.fr/mcp"
+    }
+  }
+}
+```
+
+### Direct HTTP Request (Advanced)
+
+If you need to test the endpoint directly:
+
+```bash
+curl -X POST https://mcp.data.gouv.fr/mcp \
+  -H "Content-Type: application/json" \
+  -H "Origin: https://mcp.data.gouv.fr" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/list",
+    "params": {}
+  }'
+```
+
+## Monitoring
+
+All requests to the `/mcp` endpoint are tracked with Matomo analytics for usage monitoring and insights. No personally identifiable information is collected.
+
+## Error Handling
+
+Errors are returned following the JSON-RPC 2.0 error format:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32600,
+    "message": "Invalid Request",
+    "data": { ... }
+  }
+}
+```
+
+### Common Error Codes
+
+- `-32700` - Parse error (invalid JSON)
+- `-32600` - Invalid request
+- `-32601` - Method not found
+- `-32602` - Invalid parameters
+- `-32603` - Internal error
+
+## Related Resources
+
+- [MCP Specification](https://modelcontextprotocol.io/)
+- [Available Tools](/api/tools/overview)
+- [Getting Started](/quickstart)

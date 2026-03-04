@@ -1,0 +1,82 @@
+---
+title: get_dataservice_info
+description: Get detailed metadata about a specific dataservice (external API)
+---
+
+Get detailed metadata about a specific dataservice (external third-party API) including title, description, organization, base API URL, OpenAPI specification URL, license, and dates.
+
+## Parameters
+
+<ParamField path="dataservice_id" type="string" required>
+  The unique identifier of the dataservice.
+  
+  This ID can be obtained from the `search_dataservices` tool results or from a data.gouv.fr dataservice URL.
+</ParamField>
+
+## Returns
+
+Returns a formatted text response containing:
+
+- Dataservice title
+- Dataservice ID
+- Dataservice URL on data.gouv.fr
+- Description (truncated to 500 characters)
+- **Base API URL** - The root endpoint of the API
+- **OpenAPI/Swagger spec URL** - URL to fetch the machine-readable API specification
+- Organization name and ID
+- Tags (up to 10)
+- Creation date
+- Last update date
+- License information
+- Number of related datasets
+
+If the dataservice is not found, returns an error message.
+
+## Usage notes
+
+<Note>
+To use a dataservice: (1) Get its info with this tool, (2) Fetch the OpenAPI spec with `get_dataservice_openapi_spec`, (3) Call the base API URL according to the spec.
+</Note>
+
+### Key fields for API usage
+
+Two fields are essential for using the API:
+
+- **base_api_url**: The root URL where the API is hosted
+- **machine_documentation_url**: URL to the OpenAPI/Swagger specification
+
+### Understanding the response
+
+- **Base API URL** tells you where to send requests
+- **OpenAPI spec URL** tells you where to fetch the API documentation
+- **Related datasets** shows how many datasets are associated with this API
+
+### Next steps
+
+After getting dataservice information:
+
+1. Use `get_dataservice_openapi_spec` to fetch and summarize the API specification
+2. Review the available endpoints, parameters, and authentication requirements
+3. Call the API directly using the base URL and endpoint paths from the spec
+
+<Tip>
+The OpenAPI specification provides detailed information about available endpoints, required parameters, authentication, and response formats. Always fetch it before calling the API.
+</Tip>
+
+## Error handling
+
+The tool handles the following error cases:
+
+- **404 Not Found**: Returns a message indicating the dataservice ID was not found
+- **Other HTTP errors**: Returns the HTTP status code and error details
+- **Unexpected errors**: Returns the error message
+
+## Example workflow
+
+```
+1. search_dataservices(query="adresse")
+2. get_dataservice_info(dataservice_id="<id from search results>")
+3. Note the base_api_url and machine_documentation_url
+4. get_dataservice_openapi_spec(dataservice_id="<same id>")
+5. Call the API using base_api_url + endpoint path from spec
+```

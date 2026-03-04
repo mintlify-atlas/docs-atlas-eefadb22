@@ -1,0 +1,381 @@
+---
+title: Usage metrics
+description: Track visits and downloads for datasets and resources
+---
+
+The `get_metrics` tool provides usage statistics for datasets and resources on data.gouv.fr, helping you understand how data is being accessed and used.
+
+## What metrics are available?
+
+The Metrics API provides monthly statistics including:
+
+- **Visits**: Number of page views for datasets
+- **Downloads**: Number of times resources were downloaded
+- **Time series**: Month-by-month historical data
+
+<Note>
+  Metrics are sorted by month in descending order (most recent first) for easier analysis of current trends.
+</Note>
+
+## Production-only limitation
+
+The Metrics API is only available in the production environment.
+
+<Warning>
+  If you're running the MCP server with `DATAGOUV_API_ENV=demo`, the `get_metrics` tool will return an error. The Metrics API does not have a demo or preprod environment.
+</Warning>
+
+To use metrics:
+
+```bash
+# Set environment to production
+export DATAGOUV_API_ENV=prod
+
+# Or run with Docker
+MCP_ENV=prod DATAGOUV_API_ENV=prod docker compose up
+```
+
+## Using get_metrics
+
+The tool accepts optional parameters for dataset and resource IDs.
+
+### Parameters
+
+```python
+get_metrics(
+    dataset_id: str = None,   # Optional: dataset ID
+    resource_id: str = None,  # Optional: resource ID
+    limit: int = 12           # Number of months (max: 100)
+)
+```
+
+<Warning>
+  At least one of `dataset_id` or `resource_id` must be provided. You cannot call the tool without any IDs.
+</Warning>
+
+### Limit parameter
+
+The `limit` parameter controls how many months of data to retrieve:
+
+- **Default**: 12 months (1 year)
+- **Maximum**: 100 months (~8 years)
+- **Minimum**: 1 month
+
+```python
+# Get 6 months of data
+get_metrics(dataset_id="dataset-id", limit=6)
+
+# Get 2 years of data
+get_metrics(dataset_id="dataset-id", limit=24)
+
+# Get maximum available history
+get_metrics(dataset_id="dataset-id", limit=100)
+```
+
+## Dataset metrics
+
+Get usage statistics for an entire dataset:
+
+```python
+get_metrics(dataset_id="53699934a3a729239d203a52")
+```
+
+### Output format
+
+```
+Dataset Metrics: [Dataset Title]
+Dataset ID: 53699934a3a729239d203a52
+
+Monthly Statistics:
+------------------------------------------------------------
+Month        Visits          Downloads      
+------------------------------------------------------------
+2026-02      15,234          8,567         
+2026-01      14,892          8,123         
+2025-12      16,543          9,234         
+2025-11      15,678          8,891         
+...
+------------------------------------------------------------
+Total        182,347         103,815       
+```
+
+Dataset metrics include:
+
+- **Visits** (`monthly_visit`): Page views for the dataset page
+- **Downloads** (`monthly_download_resource`): Total downloads across all resources
+- **Total**: Sum of all months
+
+## Resource metrics
+
+Get download statistics for a specific resource:
+
+```python
+get_metrics(resource_id="3b6b2281-b9d9-4959-ae9d-c2c166dff118")
+```
+
+### Output format
+
+```
+Resource Metrics: [Resource Title]
+Resource ID: 3b6b2281-b9d9-4959-ae9d-c2c166dff118
+
+Monthly Statistics:
+----------------------------------------
+Month        Downloads      
+----------------------------------------
+2026-02      8,567         
+2026-01      8,123         
+2025-12      9,234         
+2025-11      8,891         
+...
+----------------------------------------
+Total        103,815       
+```
+
+Resource metrics include:
+
+- **Downloads** (`monthly_download_resource`): Number of times the file was downloaded
+- **Total**: Sum of all months
+
+<Note>
+  Resources don't have "visits" since they are files, not web pages. Only download counts are provided.
+</Note>
+
+## Combined metrics
+
+You can request both dataset and resource metrics in a single call:
+
+```python
+get_metrics(
+    dataset_id="53699934a3a729239d203a52",
+    resource_id="3b6b2281-b9d9-4959-ae9d-c2c166dff118"
+)
+```
+
+This returns both sections:
+
+```
+Dataset Metrics: [Dataset Title]
+Dataset ID: 53699934a3a729239d203a52
+
+Monthly Statistics:
+------------------------------------------------------------
+[dataset metrics table]
+
+
+Resource Metrics: [Resource Title]
+Resource ID: 3b6b2281-b9d9-4959-ae9d-c2c166dff118
+
+Monthly Statistics:
+----------------------------------------
+[resource metrics table]
+```
+
+## Interpreting the data
+
+### Month format
+
+Months are formatted as `YYYY-MM` (e.g., `2026-02` for February 2026).
+
+### Number formatting
+
+All numbers use thousand separators for readability:
+
+- `15,234` instead of `15234`
+- `1,234,567` instead of `1234567`
+
+### Missing data
+
+If no metrics are available:
+
+```
+No metrics available for this dataset.
+```
+
+or
+
+```
+No metrics available for this resource.
+```
+
+This can happen for:
+- Newly created datasets/resources
+- Private or unpublished items
+- Items with no recorded activity
+
+## Common use cases
+
+### Tracking dataset popularity
+
+```python
+# Get 12 months of dataset metrics
+get_metrics(dataset_id="dataset-id", limit=12)
+```
+
+Use this to:
+- Monitor dataset visibility
+- Track seasonal trends
+- Measure impact of updates or announcements
+
+### Analyzing resource downloads
+
+```python
+# Get resource download history
+get_metrics(resource_id="resource-id", limit=24)
+```
+
+Use this to:
+- Identify most popular resources
+- Track download trends over time
+- Validate data quality improvements
+
+### Comparing multiple resources
+
+```python
+# Get metrics for first resource
+get_metrics(resource_id="resource-1-id")
+
+# Get metrics for second resource
+get_metrics(resource_id="resource-2-id")
+```
+
+Use this to:
+- Compare popularity between formats (CSV vs JSON)
+- Identify preferred data representations
+- Optimize resource offerings
+
+### Long-term trend analysis
+
+```python
+# Get maximum available history
+get_metrics(dataset_id="dataset-id", limit=100)
+```
+
+Use this to:
+- Understand multi-year trends
+- Track impact of platform changes
+- Identify long-term growth patterns
+
+## Workflow example
+
+A complete workflow to analyze dataset performance:
+
+<Steps>
+  <Step title="Find the dataset">
+    ```python
+    search_datasets(query="transport")
+    ```
+  </Step>
+  
+  <Step title="Get dataset details">
+    ```python
+    get_dataset_info(dataset_id="found-dataset-id")
+    ```
+  </Step>
+  
+  <Step title="Check dataset metrics">
+    ```python
+    get_metrics(dataset_id="found-dataset-id", limit=12)
+    ```
+  </Step>
+  
+  <Step title="List resources">
+    ```python
+    list_dataset_resources(dataset_id="found-dataset-id")
+    ```
+  </Step>
+  
+  <Step title="Compare resource metrics">
+    ```python
+    get_metrics(resource_id="resource-1-id")
+    get_metrics(resource_id="resource-2-id")
+    ```
+  </Step>
+</Steps>
+
+## Error handling
+
+### Environment error
+
+```
+Error: The Metrics API is not available in the demo environment.
+The Metrics API only exists in production. Please set DATAGOUV_API_ENV=prod
+to use this tool, or switch to production environment to access metrics data.
+```
+
+**Solution**: Set `DATAGOUV_API_ENV=prod` in your environment.
+
+### Missing IDs error
+
+```
+Error: At least one of dataset_id or resource_id must be provided.
+```
+
+**Solution**: Provide at least one ID:
+
+```python
+# Valid
+get_metrics(dataset_id="id")
+get_metrics(resource_id="id")
+get_metrics(dataset_id="id1", resource_id="id2")
+
+# Invalid
+get_metrics()  # No IDs provided
+```
+
+### Metadata fetch errors
+
+If the tool can't fetch metadata for the dataset or resource, it will still attempt to retrieve metrics but with generic headers:
+
+```
+Dataset Metrics
+Dataset ID: unknown-id
+
+[metrics data if available]
+```
+
+## Data format details
+
+### API response structure
+
+The Metrics API returns an array of metric objects:
+
+```json
+[
+  {
+    "metric_month": "2026-02",
+    "monthly_visit": 15234,
+    "monthly_download_resource": 8567
+  },
+  {
+    "metric_month": "2026-01",
+    "monthly_visit": 14892,
+    "monthly_download_resource": 8123
+  }
+]
+```
+
+### Field definitions
+
+- **`metric_month`**: The month in YYYY-MM format
+- **`monthly_visit`**: Number of page views (datasets only)
+- **`monthly_download_resource`**: Number of file downloads
+
+## Best practices
+
+1. **Start with recent data**: Use the default 12-month limit to see current trends
+2. **Verify environment**: Ensure you're running in production mode
+3. **Combine with other tools**: Use with `get_dataset_info` for context
+4. **Compare resources**: Check metrics for all resources in a dataset to identify the most useful formats
+5. **Track over time**: Regular monitoring helps identify trends and anomalies
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Working with datasets" icon="database" href="/guides/datasets">
+    Learn how to search and explore datasets
+  </Card>
+  <Card title="Querying data" icon="filter" href="/guides/querying-data">
+    Access and analyze resource data
+  </Card>
+</CardGroup>

@@ -1,80 +1,189 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Connect your AI chatbot to data.gouv.fr in under 5 minutes"
 ---
 
-## Get started in three steps
+Get started with the data.gouv.fr MCP Server by connecting your favorite AI chatbot to the hosted endpoint. No installation, API keys, or complex setup required.
 
-Get your documentation site running locally and make your first customization.
+## Connect in 3 steps
 
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<Steps>
+  <Step title="Choose your AI client">
+    Select an AI chatbot that supports the Model Context Protocol. Popular options include:
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    - **Claude Desktop** - Anthropic's desktop application
+    - **ChatGPT** - OpenAI's web interface (Plus, Pro, Team, or Enterprise plans)
+    - **Gemini CLI** - Google's command-line interface
+    - **Cursor** - AI-powered code editor
+    - **VS Code** - With MCP extension
+    - **Windsurf** - Codeium's AI editor
+    - **HuggingChat** - Hugging Face's open chatbot
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    And 8+ more clients. See the [full list](/clients/overview) with setup instructions for each.
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    <Tip>
+      **No API key required**. The MCP server is read-only and freely accessible.
+    </Tip>
+  </Step>
+  
+  <Step title="Add the MCP server configuration">
+    Add the hosted endpoint to your client's MCP configuration file. The exact format depends on your client, but most use a JSON configuration like this:
+    
+    **For Claude Desktop** (`claude_desktop_config.json`):
+    
+    ```json
+    {
+      "mcpServers": {
+        "datagouv": {
+          "command": "npx",
+          "args": [
+            "mcp-remote",
+            "https://mcp.data.gouv.fr/mcp"
+          ]
+        }
+      }
+    }
+    ```
+    
+    **For Cursor** (MCP settings):
+    
+    ```json
+    {
+      "mcpServers": {
+        "datagouv": {
+          "url": "https://mcp.data.gouv.fr/mcp",
+          "transport": "http"
+        }
+      }
+    }
+    ```
+    
+    **For ChatGPT** (web interface):
+    
+    1. Go to **Settings** → **Apps and connectors**
+    2. Enable **Developer mode** in Advanced settings
+    3. Click **Add a new connector** in the Connectors section
+    4. Set the URL to `https://mcp.data.gouv.fr/mcp`
+    
+    <Note>
+      Configuration file locations vary by platform. On Linux, Claude Desktop uses `~/.config/Claude/claude_desktop_config.json`. On macOS, it's `~/Library/Application Support/Claude/claude_desktop_config.json`. See [client-specific guides](/clients/overview) for exact paths.
+    </Note>
+    
+    <Tip>
+      Using the hosted endpoint at `https://mcp.data.gouv.fr/mcp` means zero setup. You can also [self-host with Docker](/setup/docker) if needed.
+    </Tip>
+  </Step>
+  
+  <Step title="Start using the tools">
+    Restart your AI client to load the MCP server. Then ask natural language questions to explore French Open Data:
+    
+    **Example questions to try:**
+    
+    - "What datasets are available about housing prices in Paris?"
+    - "Show me the latest population data for Lyon"
+    - "Find datasets about renewable energy in France"
+    - "Get the visitor statistics for dataset XYZ"
+    - "What APIs are available for address geocoding?"
+    
+    Your AI assistant will automatically use the appropriate MCP tools to search datasets, query data, download files, and retrieve metrics.
+    
+    <Tip>
+      The MCP server provides 10 tools for working with datasets, dataservices (external APIs), and metrics. Learn about each tool in the [API Reference](/api/tools/overview).
+    </Tip>
+  </Step>
+</Steps>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+## What you can do
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+Once connected, you can use your AI chatbot to:
 
-### Step 3: Go live
+<CardGroup cols={2}>
+  <Card title="Search datasets" icon="magnifying-glass">
+    Find datasets by keywords across 50,000+ resources from data.gouv.fr
+  </Card>
+  
+  <Card title="Query tabular data" icon="table">
+    Run queries on CSV and Excel files without downloading them using the Tabular API
+  </Card>
+  
+  <Card title="Download large files" icon="download">
+    Parse CSV, JSON, and JSONL files up to 500MB with automatic format detection
+  </Card>
+  
+  <Card title="Explore APIs" icon="code">
+    Discover external dataservices and view their OpenAPI specifications
+  </Card>
+  
+  <Card title="Get usage metrics" icon="chart-line">
+    Retrieve monthly visits and downloads for any dataset or resource
+  </Card>
+  
+  <Card title="View metadata" icon="info-circle">
+    Access detailed information about datasets, resources, organizations, and licenses
+  </Card>
+</CardGroup>
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+## Example workflow
+
+Here's a typical conversation flow with your AI assistant:
+
+1. **Search for datasets**: "Find datasets about air quality in Paris"
+2. **Get dataset details**: "Show me more information about the first result"
+3. **List resources**: "What files are available in this dataset?"
+4. **Query the data**: "Show me the first 20 rows from the CSV file"
+5. **Analyze**: "What's the average PM2.5 level in the data?"
+
+The AI assistant will use multiple MCP tools behind the scenes to fetch the data and answer your questions.
+
+<Tip>
+  For small datasets, use `query_resource_data` to preview data via the Tabular API. For large files (>100MB CSV or >12.5MB Excel), use `download_and_parse_resource` instead.
+</Tip>
+
+## Verify the connection
+
+After adding the configuration and restarting your client, verify the MCP server is connected:
+
+**In Claude Desktop:**
+- Look for the 🔌 plug icon in the chat interface
+- The server name "data.gouv.fr MCP server" should appear in the MCP servers list
+
+**In ChatGPT:**
+- Go to Settings → Connectors
+- The connector should show as **Connected** with a green status indicator
+
+**In other clients:**
+- Check the MCP settings or extensions panel for connection status
+- Some clients show available tools in a sidebar or command palette
+
+<Warning>
+  If the connection fails, verify that:
+  - You've entered the exact URL: `https://mcp.data.gouv.fr/mcp`
+  - You've restarted your AI client after editing the configuration
+  - Your client supports the Model Context Protocol (MCP)
+</Warning>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Client setup guides" icon="book" href="/clients/overview">
+    Detailed configuration instructions for each supported AI client
+  </Card>
+  
+  <Card title="Available tools" icon="wrench" href="/api/tools/overview">
+    Learn about all 10 MCP tools with parameters and examples
+  </Card>
+  
+  <Card title="Query data guide" icon="database" href="/guides/querying-data">
+    Best practices for querying datasets and downloading files
+  </Card>
+  
+  <Card title="Self-host with Docker" icon="docker" href="/setup/docker">
+    Run the MCP server in your own infrastructure
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## Need help?
+
+<Card title="View on GitHub" icon="github" href="https://github.com/datagouv/datagouv-mcp">
+  Report issues, contribute, or view the source code on GitHub
+</Card>

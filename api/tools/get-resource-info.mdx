@@ -1,0 +1,85 @@
+---
+title: get_resource_info
+description: Get detailed information about a specific resource (file)
+---
+
+Get detailed information about a specific resource including format, size, MIME type, URL, dataset association, and Tabular API availability.
+
+## Parameters
+
+<ParamField path="resource_id" type="string" required>
+  The unique identifier of the resource.
+  
+  This ID can be obtained from the `list_dataset_resources` tool results or from a data.gouv.fr resource URL.
+</ParamField>
+
+## Returns
+
+Returns a formatted text response containing:
+
+- Resource title or name
+- Resource ID
+- File format (e.g., CSV, XLSX, JSON)
+- File size in human-readable format
+- MIME type
+- Resource type
+- Download URL
+- Description (if available)
+- Dataset ID and title
+- **Tabular API availability** status with one of:
+  - ✅ Available via Tabular API (can be queried)
+  - ✅ Available via Tabular API (large file exception)
+  - ⚠️ Not available via Tabular API (may not be tabular data)
+  - ⚠️ Could not check Tabular API availability
+
+If the resource is not found, returns an error message.
+
+## Usage notes
+
+<Note>
+Use this tool to determine which data access method to use: `query_resource_data` (if Tabular API is available) or `download_and_parse_resource` (for large files or unsupported formats).
+</Note>
+
+### Tabular API availability
+
+The tool checks if the resource is available via the Tabular API by:
+
+1. Checking if the resource is in the large file exceptions list
+2. Querying the Tabular API profile endpoint
+
+Tabular API support:
+
+- **CSV files**: ≤ 100 MB (some large files have special exception support)
+- **XLSX files**: ≤ 12.5 MB
+- **Other formats**: Not supported via Tabular API
+
+### Choosing the right data access tool
+
+Based on the Tabular API availability:
+
+| Status | Recommended tool | Reason |
+|--------|-----------------|--------|
+| ✅ Available | `query_resource_data` | Fast querying, filtering, sorting without download |
+| ⚠️ Not available | `download_and_parse_resource` | Direct download and parsing |
+
+<Tip>
+For CSV/XLSX files available via Tabular API, use `query_resource_data` for faster access. For JSON/JSONL or large files, use `download_and_parse_resource`.
+</Tip>
+
+## Error handling
+
+The tool handles the following error cases:
+
+- **404 Not Found**: Returns a message indicating the resource ID was not found
+- **Other HTTP errors**: Returns the HTTP status code and error details
+- **Tabular API check failures**: Continues and reports availability as unknown
+- **Unexpected errors**: Returns the error message
+
+## Example workflow
+
+```
+1. list_dataset_resources(dataset_id="<dataset-id>")
+2. get_resource_info(resource_id="<resource-id>")
+3. Check Tabular API availability in the response
+4. Use query_resource_data or download_and_parse_resource based on availability
+```

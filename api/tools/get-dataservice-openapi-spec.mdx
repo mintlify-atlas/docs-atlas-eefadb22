@@ -1,0 +1,118 @@
+---
+title: get_dataservice_openapi_spec
+description: Fetch and summarize the OpenAPI specification for a dataservice
+---
+
+Fetch and summarize the OpenAPI/Swagger specification for a dataservice (external third-party API). Returns a concise overview of available endpoints with their parameters.
+
+## Parameters
+
+<ParamField path="dataservice_id" type="string" required>
+  The unique identifier of the dataservice.
+  
+  This ID can be obtained from the `search_dataservices` or `get_dataservice_info` tool results.
+</ParamField>
+
+## Returns
+
+Returns a formatted text response containing:
+
+- API title and version
+- API description (truncated to 300 characters)
+- Server URLs (base endpoints)
+- Base URL for OpenAPI 2.0 (Swagger) specs
+- **List of all endpoints** with:
+  - HTTP method (GET, POST, etc.)
+  - Endpoint path
+  - Summary/description
+  - Parameters:
+    - Parameter name
+    - Location (query, path, header, body)
+    - Type (string, integer, etc.)
+    - Required or optional
+
+If the dataservice has no OpenAPI spec URL, returns an error message with the base API URL (if available).
+
+## Specification formats
+
+The tool supports both OpenAPI specification formats:
+
+- **OpenAPI 3.0+**: Modern specification format with `servers` array
+- **OpenAPI 2.0 (Swagger)**: Legacy format with `host`, `basePath`, and `schemes`
+
+## Usage notes
+
+<Note>
+This tool retrieves the machine_documentation_url from the dataservice metadata, fetches the spec, and summarizes it into a concise, readable format. Complex response schemas and examples are omitted for clarity.
+</Note>
+
+### What's included in the summary
+
+The summary focuses on actionable information for calling the API:
+
+- ✅ API title, version, and description
+- ✅ Base URLs and servers
+- ✅ All endpoints with HTTP methods
+- ✅ Endpoint summaries and descriptions
+- ✅ All parameters with types and requirements
+
+### What's excluded from the summary
+
+To keep the summary concise:
+
+- ❌ Response schemas and model definitions
+- ❌ Example values
+- ❌ Authentication details (use base API documentation for this)
+- ❌ Detailed error responses
+
+### Calling the API
+
+After fetching the spec:
+
+1. Note the **base URL** (from servers or host/basePath)
+2. Choose an **endpoint** from the list
+3. Provide **required parameters** as indicated
+4. Send HTTP request: `{base_url}{endpoint_path}`
+
+<Tip>
+Required parameters are marked with "(required)" in the output. Optional parameters can be omitted from your API calls.
+</Tip>
+
+## Error handling
+
+The tool handles the following error cases:
+
+- **No OpenAPI spec URL**: Returns message with base API URL if available
+- **404 Not Found**: Returns error if dataservice ID is invalid
+- **HTTP errors**: Returns status code and error details
+- **Invalid spec format**: Returns error if the spec cannot be parsed
+- **Fetch failures**: Returns error message with details
+
+## Example workflow
+
+Typical workflow: `search_dataservices` → `get_dataservice_info` → `get_dataservice_openapi_spec` → call the API using `base_api_url` per spec.
+
+```
+1. search_dataservices(query="adresse")
+2. get_dataservice_info(dataservice_id="<id>")
+3. get_dataservice_openapi_spec(dataservice_id="<id>")
+4. Review endpoints and parameters in the summary
+5. Call the API:
+   - Base URL: https://api-adresse.data.gouv.fr
+   - Endpoint: /search
+   - Parameters: ?q=Paris&limit=10
+   - Full URL: https://api-adresse.data.gouv.fr/search?q=Paris&limit=10
+```
+
+<Warning>
+The OpenAPI spec summary is designed for understanding the API structure. For detailed information about authentication, rate limits, and response formats, refer to the human-readable documentation on the dataservice page.
+</Warning>
+
+## Parameter location types
+
+Parameters can be located in different parts of the HTTP request:
+
+- **query**: URL query string (e.g., `?name=value`)
+- **path**: URL path segment (e.g., `/users/{id}`)
+- **header**: HTTP headers
+- **body**: Request body (for POST/PUT requests)

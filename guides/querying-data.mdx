@@ -1,0 +1,427 @@
+---
+title: Querying data
+description: Access and analyze resource data using the Tabular API or direct downloads
+---
+
+The MCP server provides two complementary tools for accessing resource data: `query_resource_data` for fast querying via the Tabular API, and `download_and_parse_resource` for direct file downloads.
+
+## Choosing the right tool
+
+<CardGroup cols={2}>
+  <Card title="query_resource_data" icon="filter">
+    **Best for:**
+    - CSV and XLSX files
+    - Files within size limits
+    - Filtering and sorting
+    - Quick data previews
+    - Pagination through results
+    
+    **Limitations:**
+    - CSV files ≤ 100 MB
+    - XLSX files ≤ 12.5 MB
+    - Only tabular formats
+  </Card>
+  
+  <Card title="download_and_parse_resource" icon="download">
+    **Best for:**
+    - JSON and JSONL files
+    - Large files (&gt;100 MB)
+    - Files exceeding Tabular API limits
+    - External URLs
+    - Full dataset analysis
+    
+    **Limitations:**
+    - Requires full download
+    - Supports: CSV, CSV.GZ, JSON, JSONL
+    - Default: 500 MB size limit
+  </Card>
+</CardGroup>
+
+## Using query_resource_data
+
+The `query_resource_data` tool queries data through the Tabular API without downloading files.
+
+### Basic usage
+
+```python
+query_resource_data(
+    question: str,                  # Description of what you're looking for (required)
+    resource_id: str,               # Resource ID from list_dataset_resources (required)
+    page: int = 1,                  # Page number for pagination
+    page_size: int = 20,            # Rows per page (max: 200)
+    filter_column: str = None,      # Column name to filter
+    filter_value: str = None,       # Value to filter by
+    filter_operator: str = "exact", # Filter comparison operator
+    sort_column: str = None,        # Column name to sort by
+    sort_direction: str = "asc"     # Sort direction: "asc" or "desc"
+)
+```
+
+### Preview strategy
+
+Always start with a small `page_size` to preview the data structure:
+
+```python
+# First, preview the structure
+query_resource_data(
+    question="What columns are available?",
+    resource_id="3b6b2281-b9d9-4959-ae9d-c2c166dff118",
+    page_size=20  # Default
+)
+```
+
+### Filtering data
+
+The Tabular API supports six filter operators:
+
+- **`exact`**: Exact match (default)
+- **`contains`**: Substring match
+- **`less`**: Less than or equal (≤)
+- **`greater`**: Greater than or equal (≥)
+- **`strictly_less`**: Strictly less than (&lt;)
+- **`strictly_greater`**: Strictly greater than (&gt;)
+
+#### Filter examples
+
+```python
+# Exact match
+query_resource_data(
+    question="Find records for Paris",
+    resource_id="resource-id",
+    filter_column="ville",
+    filter_value="Paris",
+    filter_operator="exact"
+)
+
+# Substring search
+query_resource_data(
+    question="Find cities containing 'Saint'",
+    resource_id="resource-id",
+    filter_column="ville",
+    filter_value="Saint",
+    filter_operator="contains"
+)
+
+# Numeric comparison
+query_resource_data(
+    question="Find records with population over 100000",
+    resource_id="resource-id",
+    filter_column="population",
+    filter_value="100000",
+    filter_operator="strictly_greater"
+)
+```
+
+<Note>
+  Filters are applied on the server side by the Tabular API, so you only receive matching rows.
+</Note>
+
+### Sorting data
+
+Sort results by any column in ascending or descending order:
+
+```python
+# Sort ascending (default)
+query_resource_data(
+    question="Show cities sorted by population",
+    resource_id="resource-id",
+    sort_column="population",
+    sort_direction="asc"
+)
+
+# Sort descending
+query_resource_data(
+    question="Show cities sorted by population (highest first)",
+    resource_id="resource-id",
+    sort_column="population",
+    sort_direction="desc"
+)
+```
+
+### Pagination
+
+For datasets with many rows, use pagination to retrieve data in chunks:
+
+```python
+# Get first page
+query_resource_data(
+    question="Get first 50 rows",
+    resource_id="resource-id",
+    page=1,
+    page_size=50
+)
+
+# Get second page
+query_resource_data(
+    question="Get next 50 rows",
+    resource_id="resource-id",
+    page=2,
+    page_size=50
+)
+```
+
+#### Pagination indicators
+
+The tool provides helpful indicators:
+
+- **Total rows**: Complete row count in the dataset
+- **Total pages**: Number of pages at current page size
+- **Retrieved**: Number of rows in the current page
+- **Next page hint**: Suggestion to continue with `page=N`
+
+<Warning>
+  For large datasets (&gt;1000 rows), the tool will suggest using `download_and_parse_resource` instead of paginating through many pages.
+</Warning>
+
+### Combining filters and sorting
+
+You can filter and sort simultaneously:
+
+```python
+query_resource_data(
+    question="Show Paris records sorted by date",
+    resource_id="resource-id",
+    filter_column="ville",
+    filter_value="Paris",
+    filter_operator="exact",
+    sort_column="date",
+    sort_direction="desc"
+)
+```
+
+## Using download_and_parse_resource
+
+The `download_and_parse_resource` tool downloads and parses files directly.
+
+### Basic usage
+
+```python
+download_and_parse_resource(
+    resource_id: str,        # Resource ID (required)
+    max_rows: int = 20,      # Maximum rows to return
+    max_size_mb: int = 500   # Maximum file size in MB
+)
+```
+
+### Preview strategy
+
+Always start with the default `max_rows` to preview:
+
+```python
+# First, preview the structure
+download_and_parse_resource(
+    resource_id="resource-id",
+    max_rows=20  # Default - just preview
+)
+```
+
+If you need more data, increase `max_rows`:
+
+```python
+# Get all data (or up to max_rows)
+download_and_parse_resource(
+    resource_id="resource-id",
+    max_rows=10000  # Adjust based on file size
+)
+```
+
+### Supported formats
+
+The tool supports:
+
+- **CSV**: Comma-separated values
+- **CSV.GZ**: Compressed CSV files
+- **JSON**: JSON arrays or single objects
+- **JSONL**: Line-delimited JSON (also called NDJSON)
+
+<Note>
+  The tool automatically detects file format from the filename and Content-Type header.
+</Note>
+
+### CSV delimiter detection
+
+For CSV files, the tool automatically detects the delimiter:
+
+1. Uses Python's `csv.Sniffer` on the first 5 lines
+2. Supports: `,` (comma), `;` (semicolon), `\t` (tab), `|` (pipe)
+3. Falls back to counting delimiter occurrences if sniffing fails
+
+This works seamlessly with various CSV formats, including French CSV files that often use semicolons.
+
+### Gzip compression
+
+Gzipped files are automatically decompressed:
+
+```python
+# Works for .csv.gz files
+download_and_parse_resource(
+    resource_id="resource-id-for-csv-gz"
+)
+```
+
+### JSON handling
+
+The tool handles multiple JSON formats:
+
+- **JSON arrays**: `[{...}, {...}]`
+- **Single objects**: `{...}` (returned as a one-item list)
+- **JSONL/NDJSON**: One JSON object per line
+
+### File size limits
+
+You can adjust the maximum download size:
+
+```python
+# Increase limit for large files
+download_and_parse_resource(
+    resource_id="resource-id",
+    max_size_mb=1000  # Allow up to 1 GB
+)
+
+# Decrease limit for safety
+download_and_parse_resource(
+    resource_id="resource-id",
+    max_size_mb=100   # Limit to 100 MB
+)
+```
+
+<Warning>
+  The tool checks file size before completing the download. If a file exceeds `max_size_mb`, the download is aborted and an error is returned.
+</Warning>
+
+### Format limitations
+
+- **XLSX/XLS**: Not supported by this tool. Use `query_resource_data` for Excel files under 12.5 MB.
+- **XML**: Format detected but parsing not yet implemented.
+- **Other formats**: Will be reported as unsupported.
+
+## Working with large datasets
+
+### Small datasets (&lt;500 rows)
+
+Use `query_resource_data` with adjusted page size:
+
+```python
+query_resource_data(
+    question="Get all data",
+    resource_id="resource-id",
+    page_size=200  # Maximum allowed
+)
+```
+
+For datasets with 200-500 rows, paginate 2-3 times.
+
+### Medium datasets (500-1000 rows)
+
+Decide based on your needs:
+
+- **Specific data**: Use `query_resource_data` with filters
+- **Full analysis**: Use `download_and_parse_resource`
+
+### Large datasets (&gt;1000 rows)
+
+For comprehensive analysis:
+
+```python
+# Download and parse the full dataset
+download_and_parse_resource(
+    resource_id="resource-id",
+    max_rows=50000  # Adjust based on file size
+)
+```
+
+<Tip>
+  The `query_resource_data` tool will automatically suggest switching to `download_and_parse_resource` when it detects datasets over 1000 rows.
+</Tip>
+
+## Handling errors
+
+### Resource not available via Tabular API
+
+If you get this error with `query_resource_data`:
+
+```
+⚠️ Resource not available via Tabular API
+```
+
+The resource either:
+- Exceeds size limits (CSV &gt;100 MB, XLSX &gt;12.5 MB)
+- Is not tabular data
+- Has an unsupported format
+
+**Solution**: Use `download_and_parse_resource` instead.
+
+### File too large
+
+```
+Error: File too large: 750 MB (max: 500 MB)
+```
+
+**Solution**: Increase the `max_size_mb` parameter:
+
+```python
+download_and_parse_resource(
+    resource_id="resource-id",
+    max_size_mb=1000
+)
+```
+
+### Format not supported
+
+```
+⚠️ Format not supported for parsing
+```
+
+**Solutions**:
+- For XLSX files: Use `query_resource_data` if under 12.5 MB
+- For other formats: The file may need manual processing
+
+## Output format
+
+Both tools return data in a consistent format:
+
+```
+Querying resource: [Resource Title]
+Resource ID: [resource-id]
+Dataset: [Dataset Title] (ID: [dataset-id])
+
+Total rows: 1000
+Retrieved: 20 row(s) from page 1
+Columns: ville, population, code_postal
+
+Data (20 rows):
+  Row 1:
+    ville: Paris
+    population: 2161000
+    code_postal: 75000
+  Row 2:
+    ville: Marseille
+    population: 869815
+    code_postal: 13000
+  ...
+```
+
+<Note>
+  Long values (&gt;100 characters) are automatically truncated with "..." for readability.
+</Note>
+
+## Best practices
+
+1. **Always preview first**: Start with small page sizes or row counts
+2. **Check resource info**: Use `get_resource_info` to check Tabular API availability
+3. **Use filters**: Reduce data volume by filtering on the server side
+4. **Choose the right tool**: 
+   - Small tabular data → `query_resource_data`
+   - Large files or JSON → `download_and_parse_resource`
+5. **Monitor size**: Be mindful of file sizes and adjust limits accordingly
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Working with datasets" icon="database" href="/guides/datasets">
+    Learn how to find and explore datasets
+  </Card>
+  <Card title="Usage metrics" icon="chart-line" href="/guides/metrics">
+    Check dataset and resource statistics
+  </Card>
+</CardGroup>

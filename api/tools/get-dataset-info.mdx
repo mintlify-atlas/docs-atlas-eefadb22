@@ -1,0 +1,73 @@
+---
+title: get_dataset_info
+description: Get detailed metadata about a specific dataset
+---
+
+Get detailed information about a specific dataset including title, description, organization, tags, resource count, dates, and license.
+
+## Parameters
+
+<ParamField path="dataset_id" type="string" required>
+  The unique identifier of the dataset.
+  
+  This ID can be obtained from the `search_datasets` tool results or from a data.gouv.fr dataset URL.
+</ParamField>
+
+## Returns
+
+Returns a formatted text response containing:
+
+- Dataset title
+- Dataset ID and slug
+- Dataset URL on data.gouv.fr
+- Short description
+- Full description (truncated to 500 characters if longer than short description)
+- Organization name and ID
+- Tags (up to 10)
+- Number of resources (files)
+- Creation date
+- Last update date
+- License information
+- Update frequency
+
+If the dataset is not found, returns an error message.
+
+## Error handling
+
+The tool handles the following error cases:
+
+- **404 Not Found**: Returns a message indicating the dataset ID was not found
+- **Other HTTP errors**: Returns the HTTP status code and error details
+- **Unexpected errors**: Returns the error message
+
+## Usage notes
+
+<Note>
+This tool fetches data from the data.gouv.fr API v1 `/datasets/{id}` endpoint, which provides comprehensive metadata about a dataset.
+</Note>
+
+### When to use this tool
+
+Use `get_dataset_info` when you need:
+
+- Complete metadata about a dataset before working with its resources
+- Organization information for attribution or context
+- License information to understand usage rights
+- Update frequency to assess data freshness
+- Full description for detailed understanding of dataset contents
+
+### Next steps
+
+After getting dataset information:
+
+1. Use `list_dataset_resources` to see available files in the dataset
+2. Use `get_resource_info` to get details about a specific file
+3. Use `query_resource_data` or `download_and_parse_resource` to access the data
+
+## Example workflow
+
+```
+1. search_datasets(query="prix immobilier")
+2. get_dataset_info(dataset_id="<id from search results>")
+3. list_dataset_resources(dataset_id="<same id>")
+```

@@ -1,0 +1,142 @@
+---
+title: download_and_parse_resource
+description: Download and parse a resource directly, bypassing the Tabular API
+---
+
+Download and parse a resource directly from its URL. Use this tool for JSON/JSONL files, large datasets, or when the Tabular API is not available.
+
+## Parameters
+
+<ParamField path="resource_id" type="string" required>
+  The unique identifier of the resource to download.
+  
+  This ID can be obtained from the `list_dataset_resources` or `get_resource_info` tool results.
+</ParamField>
+
+<ParamField path="max_rows" type="integer" default={20}>
+  Maximum number of rows to return.
+  
+  Start with the default (20) to preview structure and file size. If you need all data, call again with a higher value. This limits the rows displayed, not downloaded.
+</ParamField>
+
+<ParamField path="max_size_mb" type="integer" default={500}>
+  Maximum file size to download in megabytes.
+  
+  Downloads will be rejected if the file exceeds this size. Maximum: 500 MB. This is a safety limit to prevent memory issues.
+</ParamField>
+
+## Returns
+
+Returns a formatted text response containing:
+
+- Resource title and ID
+- Download URL
+- Downloaded file size
+- Detected file format
+- Total rows in file
+- Number of rows returned (limited by `max_rows`)
+- Column names
+- All parsed data rows (up to `max_rows`, values truncated to 100 characters if longer)
+- Warning if file contains more rows than `max_rows`
+
+If the file format is not supported or an error occurs, returns an appropriate error message.
+
+## Supported formats
+
+The tool supports the following file formats:
+
+- **CSV** - Comma-separated values (automatic delimiter detection for `,`, `;`, `\t`, `|`)
+- **CSV.GZ** - Gzipped CSV files (automatically decompressed)
+- **JSON** - JSON arrays or single objects
+- **JSONL** - JSON Lines (one JSON object per line)
+
+<Note>
+XLSX and XLS formats are not currently supported by this tool. For Excel files, use `query_resource_data` if the file is available via the Tabular API.
+</Note>
+
+## Usage notes
+
+### When to use this tool
+
+Use `download_and_parse_resource` when:
+
+- Working with **JSON or JSONL files** (not supported by Tabular API)
+- The resource is **not available via Tabular API** (check with `get_resource_info`)
+- The file **exceeds Tabular API limits** (CSV > 100 MB, XLSX > 12.5 MB)
+- You need **full dataset analysis** for large datasets (>1000 rows) instead of paginating
+- The resource has an **external URL** not hosted on data.gouv.fr
+
+### When NOT to use this tool
+
+For CSV/XLSX files available via Tabular API, prefer `query_resource_data` for:
+
+- Faster preview without downloading the entire file
+- Filtering and sorting capabilities
+- Efficient querying of specific data
+
+### Download strategy
+
+<Tip>
+Start with default `max_rows=20` to preview the data structure and assess file size. If you need all data, call again with a higher `max_rows` value.
+</Tip>
+
+1. **First call**: Use `max_rows=20` to preview structure
+2. **Check total rows**: See how many rows are in the file
+3. **Second call**: If needed, increase `max_rows` to get all data
+
+### CSV delimiter detection
+
+For CSV files, the tool automatically detects the delimiter:
+
+- Tries to sniff the delimiter from the first 5 lines
+- Falls back to counting occurrences of common delimiters (`,`, `;`, `\t`, `|`)
+- Uses the delimiter with the most occurrences (minimum 2 to avoid false positives)
+
+### Compression support
+
+Gzipped files (`.gz` extension or `gzip` Content-Type) are automatically decompressed before parsing.
+
+## Error handling
+
+The tool handles the following error cases:
+
+- **Resource not found**: Returns error if resource ID is invalid
+- **No download URL**: Returns error if resource has no URL
+- **File too large**: Returns error if file exceeds `max_size_mb`
+- **Unsupported format**: Returns error with list of supported formats
+- **Download failures**: Returns HTTP error details
+- **Parse errors**: Returns parsing error message
+- **Empty files**: Returns warning if no data rows found
+
+## Example workflows
+
+### Preview JSON file
+
+```
+1. get_resource_info(resource_id="abc123")
+2. Confirm format is JSON/JSONL
+3. download_and_parse_resource(resource_id="abc123", max_rows=20)
+4. Review structure
+5. If needed: download_and_parse_resource(resource_id="abc123", max_rows=1000)
+```
+
+### Full analysis of large CSV
+
+```
+1. get_resource_info(resource_id="xyz789")
+2. Confirm file > 100 MB (not available via Tabular API)
+3. download_and_parse_resource(resource_id="xyz789", max_rows=20)
+4. Check total rows in response
+5. download_and_parse_resource(resource_id="xyz789", max_rows=10000, max_size_mb=500)
+```
+
+### Compare with Tabular API
+
+For files available via both methods:
+
+- **Use `query_resource_data`** for: Quick previews, filtered queries, exploring data
+- **Use `download_and_parse_resource`** for: Full data dumps, comprehensive analysis, data processing
+
+<Warning>
+This tool downloads the entire file before parsing, which can be slow for large files. For CSV/XLSX files under the Tabular API limits, use `query_resource_data` for faster access.
+</Warning>

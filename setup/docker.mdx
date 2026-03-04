@@ -1,0 +1,238 @@
+---
+title: Docker Deployment
+description: Deploy the data.gouv.fr MCP server using Docker Compose
+---
+
+This guide covers deploying the data.gouv.fr MCP server using Docker Compose. This is the recommended approach for production deployments.
+
+## Prerequisites
+
+You need Docker installed on your system:
+
+- **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** (macOS, Windows, Linux)
+- Or any compatible **Docker Engine** with Docker Compose support
+
+## Quick Start
+
+Clone the repository and navigate to the project directory:
+
+```bash
+git clone git@github.com:datagouv/datagouv-mcp.git
+cd datagouv-mcp
+```
+
+### Basic Deployment
+
+<CodeGroup>
+```bash Default settings
+# Run with default settings (port 8000, prod environment)
+docker compose up -d
+```
+
+```bash Custom settings
+# Run with custom environment variables
+MCP_PORT=8007 DATAGOUV_API_ENV=demo LOG_LEVEL=DEBUG docker compose up -d
+```
+
+```bash Stop the service
+# Stop and remove containers
+docker compose down
+```
+</CodeGroup>
+
+The server will be available at `http://localhost:8000/mcp` (or your custom port).
+
+## Docker Compose Configuration
+
+The `docker-compose.yml` file defines the service configuration:
+
+```yaml docker-compose.yml
+services:
+  datagouv-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: datagouv-mcp:latest
+    ports:
+      - "${MCP_PORT:-8000}:${MCP_PORT:-8000}"
+    environment:
+      - MCP_HOST=${MCP_HOST:-0.0.0.0}
+      - MCP_PORT=${MCP_PORT:-8000}
+      - DATAGOUV_API_ENV=${DATAGOUV_API_ENV:-prod}
+      - MATOMO_SITE_ID=${MATOMO_SITE_ID}
+      - MATOMO_AUTH_TOKEN=${MATOMO_AUTH_TOKEN}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, urllib.request; port = os.getenv('MCP_PORT', '8000'); urllib.request.urlopen(f'http://localhost:{port}/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+```
+
+### Key Configuration Points
+
+- **Port mapping**: The service exposes the port specified by `MCP_PORT` (default: 8000)
+- **Host binding**: Default is `0.0.0.0` to accept external connections in containerized environments
+- **Auto-restart**: The container restarts automatically unless explicitly stopped
+- **Health checks**: Built-in health monitoring using the `/health` endpoint
+
+## Environment Variables
+
+You can customize the deployment by setting environment variables before running `docker compose up`:
+
+<CodeGroup>
+```bash Command line
+# Set variables inline
+MCP_PORT=8007 DATAGOUV_API_ENV=demo docker compose up -d
+```
+
+```bash .env file
+# Or create a .env file in the project root
+MCP_HOST=0.0.0.0
+MCP_PORT=8000
+MCP_ENV=prod
+DATAGOUV_API_ENV=prod
+LOG_LEVEL=INFO
+SENTRY_DSN=https://your-sentry-dsn
+SENTRY_SAMPLE_RATE=1.0
+```
+</CodeGroup>
+
+See the [Configuration](/setup/configuration) page for detailed information about all available variables.
+
+## Production Deployment Considerations
+
+### Security
+
+<Warning>
+  Never expose the MCP server directly to the internet without proper authentication and rate limiting.
+</Warning>
+
+- **Use a reverse proxy**: Place the MCP server behind nginx or Caddy with proper authentication
+- **Network isolation**: Use Docker networks to isolate the MCP server from other services
+- **TLS/SSL**: Always use HTTPS in production with valid certificates
+
+### Monitoring
+
+#### Health Check Endpoint
+
+The server includes a built-in health check endpoint at `/health`:
+
+```bash
+curl http://localhost:8000/health
+```
+
+Response:
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-03-04T12:34:56.789Z",
+  "version": "1.0.0"
+}
+```
+
+The health check runs automatically every 30 seconds and Docker will restart the container if it fails 3 consecutive checks.
+
+#### Sentry Integration
+
+Enable error and performance monitoring with Sentry:
+
+```bash
+SENTRY_DSN=https://your-sentry-dsn \
+SENTRY_SAMPLE_RATE=0.1 \
+MCP_ENV=prod \
+docker compose up -d
+```
+
+### Resource Limits
+
+For production deployments, consider adding resource limits to your `docker-compose.yml`:
+
+```yaml
+services:
+  datagouv-mcp:
+    # ... existing configuration
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+```
+
+### Logging
+
+View container logs:
+
+<CodeGroup>
+```bash Follow logs
+# Stream logs in real-time
+docker compose logs -f
+```
+
+```bash Recent logs
+# Show last 100 lines
+docker compose logs --tail=100
+```
+
+```bash Specific service
+# View logs for datagouv-mcp service only
+docker compose logs datagouv-mcp
+```
+</CodeGroup>
+
+Adjust log verbosity with the `LOG_LEVEL` environment variable:
+
+```bash
+LOG_LEVEL=DEBUG docker compose up -d
+```
+
+## Updating the Server
+
+To update to the latest version:
+
+```bash
+# Pull latest changes
+git pull origin main
+
+# Rebuild and restart
+docker compose down
+docker compose build --no-cache
+docker compose up -d
+```
+
+## Troubleshooting
+
+### Container won't start
+
+Check the logs for errors:
+
+```bash
+docker compose logs
+```
+
+### Port conflicts
+
+If port 8000 is already in use:
+
+```bash
+MCP_PORT=8007 docker compose up -d
+```
+
+### Health check failing
+
+Verify the container can reach the health endpoint:
+
+```bash
+docker compose exec datagouv-mcp curl http://localhost:8000/health
+```
+
+### View container status
+
+```bash
+docker compose ps
+```
