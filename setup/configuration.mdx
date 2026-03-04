@@ -87,7 +87,37 @@ The data.gouv.fr MCP server is configured entirely through environment variables
   </Tip>
 </ParamField>
 
-## Monitoring and Error Tracking
+## Monitoring and Analytics
+
+### Matomo Analytics
+
+The MCP server includes optional support for [Matomo](https://matomo.org) web analytics tracking.
+
+<ParamField path="MATOMO_SITE_ID" type="string" default="">
+  Matomo site ID for analytics tracking.
+
+  When unset or empty, Matomo tracking is disabled.
+
+  ```bash
+  MATOMO_SITE_ID=1
+  ```
+
+  The site ID is available in your Matomo dashboard under Settings → Websites.
+</ParamField>
+
+<ParamField path="MATOMO_AUTH" type="string" default="">
+  Matomo authentication token for server-side tracking.
+
+  Required when `MATOMO_SITE_ID` is set. The token authenticates tracking requests to the Matomo API.
+
+  ```bash
+  MATOMO_AUTH=your-auth-token-here
+  ```
+
+  <Note>
+    The authentication token can be generated in Matomo under Settings → Personal → Security → Auth tokens.
+  </Note>
+</ParamField>
 
 ### Sentry Integration
 
